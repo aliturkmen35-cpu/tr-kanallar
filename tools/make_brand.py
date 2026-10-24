@@ -129,6 +129,7 @@ if __name__ == "__main__":
     os.makedirs(f"{RES}/drawable-xhdpi", exist_ok=True)
     banner(f"{RES}/drawable-xhdpi/banner.png")
     watermark(f"{RES}/drawable-xhdpi/watermark.png")
+    badge(280).save(f"{RES}/drawable-xhdpi/radio_logo.png")  # radyo ekranındaki büyük logo
     for q, px in [("mdpi", 48), ("hdpi", 72), ("xhdpi", 96), ("xxhdpi", 144), ("xxxhdpi", 192)]:
         os.makedirs(f"{RES}/mipmap-{q}", exist_ok=True)
         icon(px, f"{RES}/mipmap-{q}/ic_launcher.png")

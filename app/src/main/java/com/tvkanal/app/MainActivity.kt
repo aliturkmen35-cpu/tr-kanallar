@@ -141,6 +141,9 @@ class MainActivity : AppCompatActivity() {
                 buildUponParameters()
                     .setViewportSizeToPhysicalDisplaySize(this@MainActivity, true)
                     .setForceHighestSupportedBitrate(false)
+                    // İnternet yavaşlasa da 480p'nin altına düşme
+                    // (yayında 480p ve üstü yoksa en yakın kalite kullanılır)
+                    .setMinVideoSize(0, 480)
             )
         }
         // İlk saniyelerde düşük kaliteden başlamasın diye TV'ye uygun bir başlangıç hızı tahmini
@@ -248,13 +251,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---- Görüntü kalitesi (elle seçim) ----
-    // -1: ekranın kaldırdığı en iyi kalite, sabit (varsayılan)
-    //  0: otomatik, internet hızına göre değişir
+    //  0: otomatik, internet hızına göre değişir ama 480p'nin altına inmez (varsayılan)
+    // -1: ekranın kaldırdığı en iyi kalite, sabit
     // >0: seçilen yükseklik (ör. 720), sabit
 
     private var quality: Int
-        get() = prefs.getInt("quality", -1)
-        set(v) = prefs.edit().putInt("quality", v).apply()
+        get() = 0 // menü kapalı: her zaman otomatik, en az 480p
+        set(v) = prefs.edit().putInt("quality2", v).apply()
 
     private var availableHeights: List<Int> = emptyList()
 
@@ -306,9 +309,9 @@ class MainActivity : AppCompatActivity() {
     private fun showQuality() {
         if (channels.getOrNull(current)?.isRadio == true) return
         qualityOptions = buildList {
+            add("Otomatik (en az 480p)" to 0)
             add("En iyi (ekrana göre)" to -1)
             availableHeights.forEach { add("${it}p" to it) }
-            add("Otomatik (internete göre)" to 0)
         }
         qualityAdapter.submit(qualityOptions.map { RowAdapter.Row("", it.first) })
         val sel = qualityOptions.indexOfFirst { it.second == quality }.coerceAtLeast(0)
@@ -390,8 +393,8 @@ class MainActivity : AppCompatActivity() {
             // listedeki kanala "tıklama" sayılıp listeyi hemen kapatıyordu.
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { openOnKeyUp = true; return true }
             KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> { showQuality(); return true }
-            KeyEvent.KEYCODE_INFO -> {
+            // Kalite izleyiciye gösterilmez, arka planda otomatik ayarlanır (en az 480p)
+            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> {
                 if (current >= 0) showInfo(current); return true
             }
             KeyEvent.KEYCODE_BACK -> {

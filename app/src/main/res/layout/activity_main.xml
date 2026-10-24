@@ -27,7 +27,7 @@
             android:layout_width="140dp"
             android:layout_height="140dp"
             android:contentDescription="@null"
-            android:src="@mipmap/ic_launcher" />
+            android:src="@drawable/radio_logo" />
         <TextView
             android:id="@+id/radioName"
             android:layout_width="wrap_content"
