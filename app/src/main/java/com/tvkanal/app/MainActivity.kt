@@ -18,6 +18,7 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -38,6 +39,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var qualityList: RecyclerView
     private lateinit var radioCard: View
     private lateinit var radioName: TextView
+    private lateinit var natureView: View
+    private lateinit var bgVideo: PlayerView
+    private lateinit var fireCredit: View
     private lateinit var infoNumber: TextView
     private lateinit var infoName: TextView
     private lateinit var statusText: TextView
@@ -76,6 +80,9 @@ class MainActivity : AppCompatActivity() {
         qualityList = findViewById(R.id.qualityList)
         radioCard = findViewById(R.id.radioCard)
         radioName = findViewById(R.id.radioName)
+        natureView = findViewById(R.id.natureView)
+        bgVideo = findViewById(R.id.bgVideo)
+        fireCredit = findViewById(R.id.fireCredit)
         qualityList.layoutManager = LinearLayoutManager(this)
         qualityList.adapter = qualityAdapter
 
@@ -236,6 +243,7 @@ class MainActivity : AppCompatActivity() {
         p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
             .clearOverridesOfType(C.TRACK_TYPE_VIDEO).build()
         radioCard.visibility = if (ch.isRadio) View.VISIBLE else View.GONE
+        updateRadioBackground(ch.isRadio)
         radioName.text = ch.name
         val source = DefaultMediaSourceFactory(http).createMediaSource(MediaItem.fromUri(url))
         p.setMediaSource(source)
@@ -248,6 +256,35 @@ class MainActivity : AppCompatActivity() {
             "Mozilla/5.0 (Linux; Android 12; Google TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+    }
+
+    // ---- Radyo arka planı: şömine videosu ya da doğa manzarası ----
+
+    private var bgPlayer: ExoPlayer? = null
+
+    private var radioBg: String
+        get() = prefs.getString("radioBg", "fire") ?: "fire"
+        set(v) = prefs.edit().putString("radioBg", v).apply()
+
+    private fun updateRadioBackground(isRadio: Boolean) {
+        val fire = isRadio && radioBg == "fire"
+        natureView.visibility = if (isRadio && !fire) View.VISIBLE else View.GONE
+        bgVideo.visibility = if (fire) View.VISIBLE else View.GONE
+        fireCredit.visibility = bgVideo.visibility
+        findViewById<View>(R.id.fireScrim).visibility = bgVideo.visibility
+        if (fire) {
+            val bp = bgPlayer ?: ExoPlayer.Builder(this).build().also { bp ->
+                bp.setMediaItem(MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(R.raw.fireplace)))
+                bp.repeatMode = Player.REPEAT_MODE_ONE
+                bp.volume = 0f
+                bp.prepare()
+                bgVideo.player = bp
+                bgPlayer = bp
+            }
+            bp.playWhenReady = true
+        } else {
+            bgPlayer?.pause()
+        }
     }
 
     // ---- Görüntü kalitesi (elle seçim) ----
@@ -393,8 +430,16 @@ class MainActivity : AppCompatActivity() {
             // listedeki kanala "tıklama" sayılıp listeyi hemen kapatıyordu.
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { openOnKeyUp = true; return true }
             KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
+            // Radyodayken sağ tuş: şömine ↔ doğa manzarası
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                if (channels.getOrNull(current)?.isRadio == true) {
+                    radioBg = if (radioBg == "fire") "nature" else "fire"
+                    updateRadioBackground(true)
+                } else if (current >= 0) showInfo(current)
+                return true
+            }
             // Kalite izleyiciye gösterilmez, arka planda otomatik ayarlanır (en az 480p)
-            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> {
+            KeyEvent.KEYCODE_INFO -> {
                 if (current >= 0) showInfo(current); return true
             }
             KeyEvent.KEYCODE_BACK -> {
@@ -453,6 +498,9 @@ class MainActivity : AppCompatActivity() {
         player?.release()
         player = null
         playerView.player = null
+        bgPlayer?.release()
+        bgPlayer = null
+        bgVideo.player = null
     }
 
     override fun onDestroy() {

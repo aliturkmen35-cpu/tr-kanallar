@@ -14,6 +14,45 @@
         app:show_buffering="when_playing"
         app:resize_mode="fit" />
 
+    <!-- Radyo çalarken arkada dönen şömine videosu (sessiz) -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/bgVideo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="false"
+        android:visibility="gone"
+        app:resize_mode="zoom"
+        app:show_buffering="never"
+        app:use_controller="false" />
+
+    <!-- Yazılar alevlerin üstünde okunsun diye hafif karartma -->
+    <View
+        android:id="@+id/fireScrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#59000000"
+        android:visibility="gone" />
+
+    <!-- Lisans gereği video kaynağı -->
+    <TextView
+        android:id="@+id/fireCredit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:alpha="0.5"
+        android:text="Şömine videosu: Larvis, CC BY-SA 4.0, Wikimedia Commons"
+        android:textColor="@color/text"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <!-- Radyo çalarken arkada akan canlı doğa manzarası -->
+    <com.tvkanal.app.NatureView
+        android:id="@+id/natureView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <!-- Radyo çalarken ekranda görünen kart -->
     <LinearLayout
         android:id="@+id/radioCard"
@@ -35,6 +74,8 @@
             android:layout_marginTop="28dp"
             android:textColor="@color/text"
             android:textSize="44sp"
+            android:shadowColor="#AA000000"
+            android:shadowRadius="12"
             android:textStyle="bold" />
         <TextView
             android:layout_width="wrap_content"

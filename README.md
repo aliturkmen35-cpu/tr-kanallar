@@ -24,3 +24,8 @@ Google TV / Android TV için Türk kanalları oynatıcısı. Yalnızca kanallar�
 ```
 gradlew assembleRelease -PchannelsUrl=https://raw.githubusercontent.com/<kullanıcı>/tr-kanallar/main/channels.json
 ```
+
+## Kaynaklar
+
+- Radyo ekranındaki şömine videosu: "Kaminfeuer", Larvis, CC BY-SA 4.0, Wikimedia Commons
+  (https://commons.wikimedia.org/wiki/File:Kaminfeuer.webm)
