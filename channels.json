@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 13,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -100,6 +100,18 @@
       },
       "page": "https://www.teve2.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/teve2/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "dmax",
+      "name": "DMAX",
+      "category": "Ulusal",
+      "url": "https://dogus.daioncdn.net/dmax/dmax.m3u8?ce=3&app=5a02c599-d17e-4982-9b04-090934d51af7",
+      "headers": {
+        "Referer": "https://www.dmax.com.tr/"
+      },
+      "page": "https://www.dmax.com.tr/canli-izle",
+      "pattern": "https://dogus\\.daioncdn\\.net/dmax/[^\\\"'<>\\s]+",
+      "note": "Yalnızca Türkiye'den açılır"
     },
     {
       "id": "tv360",
@@ -339,6 +351,22 @@
       "category": "Radyo",
       "type": "radio",
       "url": "https://radio-trtturku.live.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "r-palnostalji",
+      "name": "Pal Nostalji",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://moondigitaledge.radyotvonline.net/palnostalji/playlist.m3u8"
+    },
+    {
+      "id": "r-radyo45lik",
+      "name": "Radyo 45'lik",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://stream.radyo45lik.com:4545/",
+      "page": "https://www.radyo45lik.com/",
+      "pattern": "https:[\\/]+stream\\.radyo45lik\\.com:[0-9]+[\\/]*"
     }
   ]
 }

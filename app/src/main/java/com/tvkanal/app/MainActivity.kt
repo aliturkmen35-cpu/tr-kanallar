@@ -14,6 +14,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.TrackSelectionOverride
@@ -191,6 +192,15 @@ class MainActivity : AppCompatActivity() {
             .setBandwidthMeter(bandwidthMeter)
             .setLoadControl(loadControl)
             .setWakeMode(C.WAKE_MODE_NETWORK) // Wi-Fi uykuya geçmesin
+            // Sesi sisteme "film/medya" olarak bildir ve ses odağını düzgün yönet:
+            // başka bir uygulama ses çalarsa üst üste binip cızırtı yapmasın
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE)
+                    .build(),
+                /* handleAudioFocus = */ true
+            )
             .build().also { p ->
             p.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
@@ -350,6 +360,9 @@ class MainActivity : AppCompatActivity() {
                 bp.setMediaItem(MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(R.raw.fireplace)))
                 bp.repeatMode = Player.REPEAT_MODE_ONE
                 bp.volume = 0f
+                // Şömine videosunun ses kanalını hiç açma: radyo sesiyle çakışmasın
+                bp.trackSelectionParameters = bp.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true).build()
                 bp.prepare()
                 bgVideo.player = bp
                 bgPlayer = bp
