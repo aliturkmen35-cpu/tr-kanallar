@@ -103,7 +103,7 @@
     <!-- Görüntü kalitesi menüsü (sağ tuş) -->
     <LinearLayout
         android:id="@+id/qualityPanel"
-        android:layout_width="300dp"
+        android:layout_width="380dp"
         android:layout_height="match_parent"
         android:layout_gravity="end"
         android:background="@color/panel"
