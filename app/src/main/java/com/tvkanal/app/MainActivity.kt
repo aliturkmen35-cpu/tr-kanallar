@@ -1,6 +1,9 @@
 package com.tvkanal.app
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -98,6 +101,21 @@ class MainActivity : AppCompatActivity() {
         channelList.adapter = channelAdapter
 
         loadChannels()
+        AutoStart.startWakeService(this)
+        askOverlayPermissionOnce()
+    }
+
+    /** Otomatik açılış için "diğer uygulamaların üzerinde göster" izni ilk açılışta bir kez istenir. */
+    private fun askOverlayPermissionOnce() {
+        if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)) return
+        if (prefs.getBoolean("askedOverlay", false)) return
+        prefs.edit().putBoolean("askedOverlay", true).apply()
+        Toast.makeText(this,
+            "TV açılınca Alin's'in kendiliğinden açılması için açılan ekranda Alin's'e izin verin",
+            Toast.LENGTH_LONG).show()
+        runCatching {
+            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+        }
     }
 
     // ---- Kanal listesi ----
