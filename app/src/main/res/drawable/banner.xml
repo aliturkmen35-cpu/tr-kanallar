@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Google TV ana ekran afişi (320x180) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp" android:height="180dp"
+    android:viewportWidth="320" android:viewportHeight="180">
+    <path android:fillColor="#E30A17" android:pathData="M0,0h320v180h-320z"/>
+    <!-- Ay -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M120,90m-45,0a45,45 0,1 1,90 0a45,45 0,1 1,-90 0"/>
+    <path android:fillColor="#E30A17"
+        android:pathData="M131,90m-36,0a36,36 0,1 1,72 0a36,36 0,1 1,-72 0"/>
+    <!-- Yıldız -->
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M190,90 L171.8,96.1 L171.7,115.4 L160.5,99.8 L142.2,105.5 L153.6,90 L142.2,74.5 L160.5,80.2 L171.7,64.6 L171.8,83.9 Z"/>
+    <!-- TV çerçevesi -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFF" android:strokeWidth="6"
+        android:pathData="M220,55h70v50h-70z"/>
+    <path android:fillColor="#FFFFFF" android:pathData="M245,105h20v8h-20z M235,113h40v5h-40z"/>
+</vector>

@@ -1,0 +1,171 @@
+{
+  "version": 2,
+  "updated": "2026-10-24",
+  "channels": [
+    {
+      "id": "trt1",
+      "name": "TRT 1",
+      "category": "Ulusal",
+      "url": "https://tv-trt1.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "showtv",
+      "name": "Show TV",
+      "category": "Ulusal",
+      "url": "https://ciner.daioncdn.net/showtv/showtv.m3u8?ce=3&app=4bc856ef-4c68-4a94-bc87-37dfaaa66558",
+      "headers": {
+        "Referer": "https://www.showtv.com.tr/"
+      },
+      "page": "https://www.showtv.com.tr/canli-yayin",
+      "pattern": "https://ciner\\.daioncdn\\.net/showtv/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "kanald",
+      "name": "Kanal D",
+      "category": "Ulusal",
+      "url": "https://demiroren.daioncdn.net/kanald/kanald.m3u8?app=kanald_web&ce=3",
+      "headers": {
+        "Referer": "https://www.kanald.com.tr/"
+      },
+      "page": "https://www.kanald.com.tr/canli-yayin",
+      "pattern": "https://demiroren\\.daioncdn\\.net/kanald/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "nowtv",
+      "name": "NOW",
+      "category": "Ulusal",
+      "url": "",
+      "page": "https://www.nowtv.com.tr/canli-yayin",
+      "pattern": "https://nowtv\\.daioncdn\\.net/[^\\\"'<>\\s]+",
+      "headers": {
+        "Referer": "https://www.nowtv.com.tr/"
+      },
+      "resolveOnPlay": true
+    },
+    {
+      "id": "tv8",
+      "name": "TV8",
+      "category": "Ulusal",
+      "url": "https://tv8.daioncdn.net/tv8/tv8.m3u8?app=7ddc255a-ef47-4e81-ab14-c0e5f2949788&ce=3",
+      "headers": {
+        "Referer": "https://www.tv8.com.tr/"
+      },
+      "page": "https://www.tv8.com.tr/canli-yayin",
+      "pattern": "https://tv8\\.daioncdn\\.net/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "kanal7",
+      "name": "Kanal 7",
+      "category": "Ulusal",
+      "url": "https://kanal7.daioncdn.net/kanal7/kanal7.m3u8?app=f99587ad-1637-494d-8255-da35b09d17a1&ce=3",
+      "headers": {
+        "Referer": "https://www.kanal7.com/"
+      },
+      "page": "https://www.kanal7.com/canli-yayin-iframe.php",
+      "pattern": "https://kanal7\\.daioncdn\\.net/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "teve2",
+      "name": "Teve2",
+      "category": "Ulusal",
+      "url": "https://demiroren.daioncdn.net/teve2/teve2.m3u8?ce=3&app=6aab838a-437e-4a1b-bbd0-e30f79cdbbbd",
+      "headers": {
+        "Referer": "https://www.teve2.com.tr/"
+      },
+      "page": "https://www.teve2.com.tr/canli-yayin",
+      "pattern": "https://demiroren\\.daioncdn\\.net/teve2/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "tv360",
+      "name": "360",
+      "category": "Ulusal",
+      "url": "https://turkmedya-live.ercdn.net/tv360/tv360_720p.m3u8",
+      "headers": {
+        "Referer": "https://www.tv360.com.tr/"
+      },
+      "page": "https://www.tv360.com.tr/canli-yayin",
+      "pattern": "https://turkmedya-live\\.ercdn\\.net/tv360/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "trthaber",
+      "name": "TRT Haber",
+      "category": "Haber",
+      "url": "https://tv-trthaber.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "haberturk",
+      "name": "Habertürk",
+      "category": "Haber",
+      "url": "https://ciner.daioncdn.net/haberturktv/haberturktv.m3u8?app=c98ab0b0-50cc-495b-bb37-778e91f5ff5b&ce=3",
+      "headers": {
+        "Referer": "https://www.haberturk.com/"
+      },
+      "page": "https://www.haberturk.com/canliyayin",
+      "pattern": "https://ciner\\.daioncdn\\.net/haberturktv/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "ahaber",
+      "name": "A Haber",
+      "category": "Haber",
+      "url": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8",
+      "headers": {
+        "Referer": "https://www.ahaber.com.tr/"
+      },
+      "page": "https://videojs.tmgrup.com.tr/getvideo/c0fbbd0d-b4cb-4e5b-b516-9993b9e506c3/00000000-0000-0000-0000-000000000000",
+      "pattern": "\\\"VideoUrl\\\":\\\"([^\\\"]+)\\\""
+    },
+    {
+      "id": "tgrthaber",
+      "name": "TGRT Haber",
+      "category": "Haber",
+      "url": "https://canli.tgrthaber.com/tgrt.m3u8",
+      "headers": {
+        "Referer": "https://www.tgrthaber.com/"
+      },
+      "page": "https://www.tgrthaber.com/canli-yayin",
+      "pattern": "https://canli\\.tgrthaber\\.com/[^\\\"'<>\\s]+\\.m3u8"
+    },
+    {
+      "id": "trtworld",
+      "name": "TRT World",
+      "category": "Haber",
+      "url": "https://tv-trtworld.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtarabi",
+      "name": "TRT Arabi",
+      "category": "Haber",
+      "url": "https://tv-trtarabi.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtcocuk",
+      "name": "TRT Çocuk",
+      "category": "Çocuk",
+      "url": "https://tv-trtcocuk.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtmuzik",
+      "name": "TRT Müzik",
+      "category": "Müzik",
+      "url": "https://tv-trtmuzik.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtturk",
+      "name": "TRT Türk",
+      "category": "Diğer",
+      "url": "https://tv-trtturk.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtavaz",
+      "name": "TRT Avaz",
+      "category": "Diğer",
+      "url": "https://tv-trtavaz.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "trtkurdi",
+      "name": "TRT Kurdî",
+      "category": "Diğer",
+      "url": "https://tv-trtkurdi.medya.trt.com.tr/master.m3u8"
+    }
+  ]
+}
