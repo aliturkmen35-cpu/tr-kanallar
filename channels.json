@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -124,6 +124,18 @@
       },
       "page": "https://player-live.dygdigital.com/js/build.js",
       "pattern": "https://dogus\\.daioncdn\\.net/ntv/ntv\\.m3u8\\?ce=3&&app=[^\\\"]+"
+    },
+    {
+      "id": "cnnturk",
+      "name": "CNN Türk",
+      "category": "Haber",
+      "url": "https://live.duhnet.tv/S2/HLS_LIVE/cnnturknp/playlist.m3u8",
+      "headers": {
+        "Referer": "https://www.cnnturk.com/"
+      },
+      "page": "https://www.cnnturk.com/canli-yayin",
+      "pattern": "https://live\\.duhnet\\.tv/+S2/HLS_LIVE/cnnturknp/playlist\\.m3u8",
+      "note": "Yalnızca Türkiye'den açılır"
     },
     {
       "id": "ahaber",
