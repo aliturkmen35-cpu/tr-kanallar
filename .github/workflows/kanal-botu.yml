@@ -1,0 +1,31 @@
+name: Kanal botu
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # her 30 dakikada bir
+  workflow_dispatch:          # GitHub'dan elle de çalıştırılabilir
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Kanalları kontrol et
+        run: python bot/update_channels.py channels.json STATUS.md
+      - name: Değişiklikleri kaydet
+        run: |
+          git config user.name "kanal-botu"
+          git config user.email "kanal-botu@users.noreply.github.com"
+          git add channels.json STATUS.md
+          if git diff --cached --quiet; then
+            echo "Değişiklik yok"
+          else
+            git commit -m "Kanal listesi otomatik güncellendi"
+            git push
+          fi
