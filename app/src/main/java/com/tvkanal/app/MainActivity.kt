@@ -227,6 +227,11 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onPlaybackStateChanged(state: Int) {
+                    // Canlı radyo "bitmez": sunucu bağlantıyı kapattıysa hemen yeniden bağlan
+                    if (state == Player.STATE_ENDED && channels.getOrNull(current)?.isRadio == true) {
+                        val idx = current
+                        main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) }, 500)
+                    }
                     if (state == Player.STATE_READY) {
                         retried = false
                         radioRetries = 0
@@ -265,8 +270,10 @@ class MainActivity : AppCompatActivity() {
             youTube.play(ch.youtube)
             return
         }
+        // Radyolar kendini medya oynatıcısı olarak tanıtır: bazı radyo sunucuları
+        // (StreamTheWorld) tarayıcı kimliğiyle gelen bağlantıyı 3 sn sonra kesiyor.
         val userAgent = ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value
-            ?: DEFAULT_UA
+            ?: if (ch.isRadio) RADIO_UA else DEFAULT_UA
 
         if (ch.page.isBlank()) {
             startStream(ch, ch.url, userAgent)
@@ -319,6 +326,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val DEFAULT_UA =
             "Mozilla/5.0 (Linux; Android 12; Google TV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"
+        private const val RADIO_UA = "AlinsTV/${BuildConfig.VERSION_NAME} (Linux; Android TV) ExoPlayerLib/1.3.1"
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
     }
