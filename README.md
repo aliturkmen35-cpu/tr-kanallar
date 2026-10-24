@@ -1,4 +1,4 @@
-# TR Kanallar
+# Alin's TV
 
 Google TV / Android TV için Türk kanalları oynatıcısı. Yalnızca kanalların kendi resmi, ücretsiz canlı yayınları kullanılır.
 

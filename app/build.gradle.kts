@@ -19,8 +19,8 @@ android {
         applicationId = "com.tvkanal.app"
         minSdk = 23
         targetSdk = 34
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "2.0"
         // Kanal listesinin sunucudaki adresi
         buildConfigField(
             "String", "CHANNELS_URL",

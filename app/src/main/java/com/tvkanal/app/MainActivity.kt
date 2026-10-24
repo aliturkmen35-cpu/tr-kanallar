@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     // ---- Kanal listesi ----
 
     private fun loadChannels() {
-        showStatus("Kanallar yükleniyor…")
+        showStatus("Alin's\nKanallar yükleniyor…")
         io.execute {
             val result = runCatching { ChannelRepository(this).load() }
             main.post {
