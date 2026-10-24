@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         watermark = findViewById(R.id.watermark)
         youTube = YouTubeLive(findViewById(R.id.ytView)) {
             watermark.visibility = View.VISIBLE
+            channels.getOrNull(current)?.let { prefs.edit().remove("yt_${it.id}").apply() }
             showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
         }
         bgVideo = findViewById(R.id.bgVideo)
@@ -181,6 +182,8 @@ class MainActivity : AppCompatActivity() {
                     } else if (ch != null && ch.youtube.isNotBlank() && !usedYouTube) {
                         // Son yedek: kanalın resmi YouTube canlı yayını
                         usedYouTube = true
+                        // Sonraki açılışlarda 6 saat boyunca doğrudan YouTube'dan başla
+                        prefs.edit().putLong("yt_${ch.id}", System.currentTimeMillis()).apply()
                         player?.stop()
                         watermark.visibility = View.GONE // YouTube oynatıcısının üstüne logo koymuyoruz
                         youTube.play(ch.youtube)
@@ -217,6 +220,16 @@ class MainActivity : AppCompatActivity() {
 
         showInfo(index)
         val token = ++playToken
+
+        // Bu kanal yakın zamanda yalnızca YouTube'dan açılabildiyse beklemeden oradan aç
+        val ytSince = prefs.getLong("yt_${ch.id}", 0L)
+        if (ch.youtube.isNotBlank() && System.currentTimeMillis() - ytSince < 6 * 3600_000L) {
+            usedYouTube = true
+            player?.stop()
+            watermark.visibility = View.GONE
+            youTube.play(ch.youtube)
+            return
+        }
         val userAgent = ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value
             ?: DEFAULT_UA
 
