@@ -22,6 +22,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.RawResourceDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -181,14 +182,29 @@ class MainActivity : AppCompatActivity() {
         val bandwidthMeter = DefaultBandwidthMeter.Builder(this)
             .setInitialBitrateEstimate(8_000_000L)
             .build()
+        // Daha uzun arabellek: kısa internet dalgalanmalarında görüntü/ses kesilmesin
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(20_000, 60_000, 2_500, 5_000)
+            .build()
         return ExoPlayer.Builder(this)
             .setTrackSelector(trackSelector)
             .setBandwidthMeter(bandwidthMeter)
+            .setLoadControl(loadControl)
+            .setWakeMode(C.WAKE_MODE_NETWORK) // Wi-Fi uykuya geçmesin
             .build().also { p ->
             p.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
-                    // Bir kez otomatik tekrar dene, olmazsa mesaj göster
                     val ch = channels.getOrNull(current)
+                    // Radyo: bağlantı koparsa vazgeçmeden yeniden bağlan
+                    if (ch != null && ch.isRadio && current >= 0) {
+                        radioRetries++
+                        if (radioRetries >= 3) showStatus("Bağlantı yenileniyor…")
+                        val idx = current
+                        main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) },
+                            (2_000L * radioRetries).coerceAtMost(15_000L))
+                        return
+                    }
+                    // TV: bir kez otomatik tekrar dene, olmazsa yedeklere geç
                     if (!retried && current >= 0) {
                         retried = true
                         main.postDelayed({ play(current, keepRetryFlag = true) }, 1500)
@@ -213,6 +229,7 @@ class MainActivity : AppCompatActivity() {
                 override fun onPlaybackStateChanged(state: Int) {
                     if (state == Player.STATE_READY) {
                         retried = false
+                        radioRetries = 0
                         hideStatus()
                     }
                 }
@@ -228,7 +245,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun play(index: Int, keepRetryFlag: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
-        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false }
+        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0 }
         youTube.stop()
         watermark.visibility = View.VISIBLE
         current = index
@@ -269,6 +286,7 @@ class MainActivity : AppCompatActivity() {
     private var playToken = 0
     private var usedFallback = false
     private var usedYouTube = false
+    private var radioRetries = 0
     private lateinit var youTube: YouTubeLive
     private lateinit var watermark: View
 
