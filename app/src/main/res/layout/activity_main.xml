@@ -14,6 +14,21 @@
         app:show_buffering="when_playing"
         app:resize_mode="fit" />
 
+    <!-- Köşedeki küçük Alin's logosu -->
+    <ImageView
+        android:id="@+id/watermark"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="36dp"
+        android:adjustViewBounds="true"
+        android:alpha="0.45"
+        android:contentDescription="@null"
+        android:focusable="false"
+        android:importantForAccessibility="no"
+        android:src="@drawable/watermark" />
+
     <!-- Kanal adı bilgi şeridi -->
     <LinearLayout
         android:id="@+id/infoBar"
