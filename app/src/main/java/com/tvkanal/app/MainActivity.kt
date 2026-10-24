@@ -1,6 +1,7 @@
 package com.tvkanal.app
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -10,12 +11,17 @@ import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.Tracks
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -28,6 +34,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var categoryList: RecyclerView
     private lateinit var channelList: RecyclerView
     private lateinit var infoBar: View
+    private lateinit var qualityPanel: View
+    private lateinit var qualityList: RecyclerView
+    private lateinit var radioCard: View
+    private lateinit var radioName: TextView
     private lateinit var infoNumber: TextView
     private lateinit var infoName: TextView
     private lateinit var statusText: TextView
@@ -62,6 +72,12 @@ class MainActivity : AppCompatActivity() {
         infoNumber = findViewById(R.id.infoNumber)
         infoName = findViewById(R.id.infoName)
         statusText = findViewById(R.id.statusText)
+        qualityPanel = findViewById(R.id.qualityPanel)
+        qualityList = findViewById(R.id.qualityList)
+        radioCard = findViewById(R.id.radioCard)
+        radioName = findViewById(R.id.radioName)
+        qualityList.layoutManager = LinearLayoutManager(this)
+        qualityList.adapter = qualityAdapter
 
         categoryList.layoutManager = LinearLayoutManager(this)
         categoryList.adapter = categoryAdapter
@@ -118,13 +134,35 @@ class MainActivity : AppCompatActivity() {
 
     private fun ensurePlayer(): ExoPlayer {
         player?.let { return it }
-        return ExoPlayer.Builder(this).build().also { p ->
+        // TV'nin ekran çözünürlüğünü algıla: 720p ekrana 1080p, 1080p ekrana 4K yayın
+        // gönderip boşuna internet harcama; ekranın kaldırabildiği en iyi kaliteyi seç.
+        val trackSelector = DefaultTrackSelector(this).apply {
+            setParameters(
+                buildUponParameters()
+                    .setViewportSizeToPhysicalDisplaySize(this@MainActivity, true)
+                    .setForceHighestSupportedBitrate(false)
+            )
+        }
+        // İlk saniyelerde düşük kaliteden başlamasın diye TV'ye uygun bir başlangıç hızı tahmini
+        val bandwidthMeter = DefaultBandwidthMeter.Builder(this)
+            .setInitialBitrateEstimate(8_000_000L)
+            .build()
+        return ExoPlayer.Builder(this)
+            .setTrackSelector(trackSelector)
+            .setBandwidthMeter(bandwidthMeter)
+            .build().also { p ->
             p.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
                     // Bir kez otomatik tekrar dene, olmazsa mesaj göster
+                    val ch = channels.getOrNull(current)
                     if (!retried && current >= 0) {
                         retried = true
                         main.postDelayed({ play(current, keepRetryFlag = true) }, 1500)
+                    } else if (ch != null && ch.fallbackUrl.isNotBlank() && !usedFallback) {
+                        // Ana yayın açılmadı: yedek yayını dene
+                        usedFallback = true
+                        startStream(ch, ch.fallbackUrl,
+                            ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value ?: DEFAULT_UA)
                     } else {
                         showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
                     }
@@ -136,6 +174,10 @@ class MainActivity : AppCompatActivity() {
                         hideStatus()
                     }
                 }
+
+                override fun onTracksChanged(tracks: Tracks) {
+                    applyQuality(tracks)
+                }
             })
             playerView.player = p
             player = p
@@ -144,7 +186,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun play(index: Int, keepRetryFlag: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
-        if (!keepRetryFlag) retried = false
+        if (!keepRetryFlag) { retried = false; usedFallback = false }
         current = index
         prefs.edit().putString("last", ch.id).apply()
         channelAdapter.selected = shownChannels.indexOf(index)
@@ -171,6 +213,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var playToken = 0
+    private var usedFallback = false
 
     private fun startStream(ch: Channel, url: String, userAgent: String) {
         if (url.isBlank()) {
@@ -186,6 +229,11 @@ class MainActivity : AppCompatActivity() {
             .setReadTimeoutMs(15_000)
 
         val p = ensurePlayer()
+        // Önceki kanalın kalite seçimi yeni kanala taşınmasın
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_VIDEO).build()
+        radioCard.visibility = if (ch.isRadio) View.VISIBLE else View.GONE
+        radioName.text = ch.name
         val source = DefaultMediaSourceFactory(http).createMediaSource(MediaItem.fromUri(url))
         p.setMediaSource(source)
         p.prepare()
@@ -198,6 +246,85 @@ class MainActivity : AppCompatActivity() {
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
     }
+
+    // ---- Görüntü kalitesi (elle seçim) ----
+    // -1: ekranın kaldırdığı en iyi kalite, sabit (varsayılan)
+    //  0: otomatik, internet hızına göre değişir
+    // >0: seçilen yükseklik (ör. 720), sabit
+
+    private var quality: Int
+        get() = prefs.getInt("quality", -1)
+        set(v) = prefs.edit().putInt("quality", v).apply()
+
+    private var availableHeights: List<Int> = emptyList()
+
+    private fun screenHeight(): Int {
+        val d = if (Build.VERSION.SDK_INT >= 30) display
+        else @Suppress("DEPRECATION") windowManager.defaultDisplay
+        val m = d?.mode ?: return 1080
+        return minOf(m.physicalWidth, m.physicalHeight).coerceAtLeast(720)
+    }
+
+    private fun applyQuality(tracks: Tracks) {
+        val p = player ?: return
+        val group = tracks.groups.firstOrNull { it.type == C.TRACK_TYPE_VIDEO } ?: run {
+            availableHeights = emptyList(); return
+        }
+        val tg = group.mediaTrackGroup
+        val heights = (0 until tg.length).map { tg.getFormat(it).height }
+        availableHeights = heights.filter { it > 0 }.distinct().sortedDescending()
+
+        val q = quality
+        if (q == 0) {
+            if (p.trackSelectionParameters.overrides.isNotEmpty()) {
+                p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                    .clearOverridesOfType(C.TRACK_TYPE_VIDEO).build()
+            }
+            return
+        }
+        val limit = if (q == -1) screenHeight() else q
+        val idx = heights.indices.filter { heights[it] in 1..limit }
+            .maxByOrNull { heights[it] * 100_000_000L + tg.getFormat(it).bitrate }
+            ?: heights.indices.minByOrNull { heights[it] } ?: return
+        val current = p.trackSelectionParameters.overrides[tg]
+        if (current != null && current.trackIndices == listOf(idx)) return
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setOverrideForType(TrackSelectionOverride(tg, idx)).build()
+    }
+
+    private var qualityOptions: List<Pair<String, Int>> = emptyList()
+
+    private val qualityAdapter = RowAdapter(onClick = { pos ->
+        qualityOptions.getOrNull(pos)?.let { (label, value) ->
+            quality = value
+            player?.let { applyQuality(it.currentTracks) }
+            hideQuality()
+            Toast.makeText(this, "Görüntü kalitesi: $label", Toast.LENGTH_SHORT).show()
+        }
+    })
+
+    private fun showQuality() {
+        if (channels.getOrNull(current)?.isRadio == true) return
+        qualityOptions = buildList {
+            add("En iyi (ekrana göre)" to -1)
+            availableHeights.forEach { add("${it}p" to it) }
+            add("Otomatik (internete göre)" to 0)
+        }
+        qualityAdapter.submit(qualityOptions.map { RowAdapter.Row("", it.first) })
+        val sel = qualityOptions.indexOfFirst { it.second == quality }.coerceAtLeast(0)
+        qualityAdapter.selected = sel
+        qualityPanel.visibility = View.VISIBLE
+        qualityList.post {
+            qualityList.findViewHolderForAdapterPosition(sel)?.itemView?.requestFocus()
+                ?: qualityList.getChildAt(0)?.requestFocus()
+        }
+    }
+
+    private fun hideQuality() {
+        qualityPanel.visibility = View.GONE
+    }
+
+    private val qualityVisible get() = qualityPanel.visibility == View.VISIBLE
 
     private fun step(delta: Int) {
         if (channels.isEmpty()) return
@@ -250,9 +377,9 @@ class MainActivity : AppCompatActivity() {
     private val listVisible get() = listPanel.visibility == View.VISIBLE
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        if (listVisible) {
+        if (listVisible || qualityVisible) {
             if (keyCode == KeyEvent.KEYCODE_BACK) {
-                hideList(); return true
+                hideList(); hideQuality(); return true
             }
             return super.onKeyDown(keyCode, event)
         }
@@ -263,7 +390,8 @@ class MainActivity : AppCompatActivity() {
             // listedeki kanala "tıklama" sayılıp listeyi hemen kapatıyordu.
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { openOnKeyUp = true; return true }
             KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
-            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> {
+            KeyEvent.KEYCODE_DPAD_RIGHT -> { showQuality(); return true }
+            KeyEvent.KEYCODE_INFO -> {
                 if (current >= 0) showInfo(current); return true
             }
             KeyEvent.KEYCODE_BACK -> {

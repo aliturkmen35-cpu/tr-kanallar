@@ -78,6 +78,8 @@ class ChannelRepository(private val context: Context) {
                 // Diğerlerinin adresini sunucudaki bot günceller.
                 page = if (o.optBoolean("resolveOnPlay") || url.isBlank()) page else "",
                 pattern = o.optString("pattern"),
+                type = o.optString("type", "tv"),
+                fallbackUrl = o.optString("fallbackUrl"),
             )
         }
     }

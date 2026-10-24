@@ -48,11 +48,19 @@ def resolve(ch):
 
 
 def works(url, headers):
+    """Yayın listesi (#EXTM3U) ya da radyolar için doğrudan ses akışı dönüyorsa çalışıyor sayılır."""
     if not url:
         return False
+    h = {"User-Agent": UA, "Range": "bytes=0-2047"}
+    h.update(headers or {})
     try:
-        status, body = fetch(url, headers, limit=64)
-        return status == 200 and body.lstrip().startswith("#EXTM3U")
+        req = urllib.request.Request(url, headers=h)
+        with urllib.request.urlopen(req, timeout=15) as r:
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            body = r.read(64).decode("utf-8", "ignore")
+            if r.status not in (200, 206):
+                return False
+            return body.lstrip().startswith("#EXTM3U") or ctype.startswith("audio/")
     except Exception:
         return False
 

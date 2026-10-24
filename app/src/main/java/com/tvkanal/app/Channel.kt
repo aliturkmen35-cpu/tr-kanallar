@@ -10,4 +10,10 @@ data class Channel(
     val page: String = "",
     /** Sayfada yayın adresini bulan düzenli ifade (boşsa ilk .m3u8 adresi alınır). */
     val pattern: String = "",
-)
+    /** "tv" ya da "radio". Radyoda ekranda görüntü yerine radyonun adı gösterilir. */
+    val type: String = "tv",
+    /** Ana yayın açılmazsa denenecek yedek yayın (ör. ATV için ATV Avrupa). */
+    val fallbackUrl: String = "",
+) {
+    val isRadio get() = type == "radio"
+}

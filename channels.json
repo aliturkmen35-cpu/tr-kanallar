@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -18,7 +18,8 @@
       },
       "page": "https://videojs.tmgrup.com.tr/getvideo/0fe2a405-8afa-4238-b429-e5f96aec3a5c/00000000-0000-0000-0000-000000000000",
       "pattern": "\\\"VideoUrl\\\":\\\"([^\\\"]+)\\\"",
-      "note": "Yalnızca Türkiye'den açılır"
+      "note": "Türkiye'den açılır; açılmazsa uygulama ATV Avrupa'yı dener (Avrupa'dan açılır)",
+      "fallbackUrl": "https://trkvz-live.ercdn.net/atvavrupa/atvavrupa.m3u8"
     },
     {
       "id": "showtv",
@@ -223,6 +224,117 @@
       "name": "TRT Kurdî",
       "category": "Diğer",
       "url": "https://tv-trtkurdi.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "r-powerturk",
+      "name": "Power Türk",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://listen.powerapp.com.tr/powerturk/mpeg/icecast.audio"
+    },
+    {
+      "id": "r-powerfm",
+      "name": "Power FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio"
+    },
+    {
+      "id": "r-joyturk",
+      "name": "Joy Türk",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/JOY_TURK.mp3"
+    },
+    {
+      "id": "r-joyturkakustik",
+      "name": "Joy Türk Akustik",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/JOYTURK_AKUSTIK.mp3"
+    },
+    {
+      "id": "r-kralfm",
+      "name": "Kral FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://dygedge2.radyotvonline.net/kralfm/playlist.m3u8",
+      "page": "https://www.kralmuzik.com.tr/radyo/kral-fm",
+      "pattern": "https://[a-z0-9]+\\.radyotvonline\\.net/kralfm/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "r-kralpop",
+      "name": "Kral Pop",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://dygedge.radyotvonline.net/kralpop/playlist.m3u8",
+      "page": "https://www.kralmuzik.com.tr/radyo/kral-fm",
+      "pattern": "https://[a-z0-9]+\\.radyotvonline\\.net/kralpop/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "r-radyo7",
+      "name": "Radyo 7",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://moondigitaledge.radyotvonline.net/radyo7/playlist.m3u8",
+      "page": "https://www.radyo7.com/canli-dinle",
+      "pattern": "https://[a-z0-9]+\\.radyotvonline\\.net/radyo7/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "r-superfm",
+      "name": "Süper FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SUPER_FM.mp3"
+    },
+    {
+      "id": "r-metrofm",
+      "name": "Metro FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/METRO_FM.mp3"
+    },
+    {
+      "id": "r-slowturk",
+      "name": "Slow Türk",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://radyo.duhnet.tv/slowturk"
+    },
+    {
+      "id": "r-fenomen",
+      "name": "Radyo Fenomen",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://live.radyofenomen.com/fenomen/128/icecast.audio"
+    },
+    {
+      "id": "r-alemfm",
+      "name": "Alem FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://turkmedya.radyotvonline.net/alemfmaac"
+    },
+    {
+      "id": "r-trtfm",
+      "name": "TRT FM",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://radio-trtfm.live.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "r-trtradyo1",
+      "name": "TRT Radyo 1",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://radio-trtradyo1.live.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "r-trtturku",
+      "name": "TRT Türkü",
+      "category": "Radyo",
+      "type": "radio",
+      "url": "https://radio-trtturku.live.trt.com.tr/master.m3u8"
     }
   ]
 }

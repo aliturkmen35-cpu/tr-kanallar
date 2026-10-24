@@ -14,6 +14,38 @@
         app:show_buffering="when_playing"
         app:resize_mode="fit" />
 
+    <!-- Radyo çalarken ekranda görünen kart -->
+    <LinearLayout
+        android:id="@+id/radioCard"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="140dp"
+            android:layout_height="140dp"
+            android:contentDescription="@null"
+            android:src="@mipmap/ic_launcher" />
+        <TextView
+            android:id="@+id/radioName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:textColor="@color/text"
+            android:textSize="44sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:letterSpacing="0.15"
+            android:text="RADYO · CANLI"
+            android:textColor="@color/text_dim"
+            android:textSize="18sp" />
+    </LinearLayout>
+
     <!-- Köşedeki küçük Alin's logosu -->
     <ImageView
         android:id="@+id/watermark"
@@ -67,6 +99,31 @@
         android:textColor="@color/text"
         android:textSize="22sp"
         android:visibility="gone" />
+
+    <!-- Görüntü kalitesi menüsü (sağ tuş) -->
+    <LinearLayout
+        android:id="@+id/qualityPanel"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@color/panel"
+        android:orientation="vertical"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="32dp"
+        android:visibility="gone">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:paddingHorizontal="14dp"
+            android:text="Görüntü kalitesi"
+            android:textColor="@color/text_dim"
+            android:textSize="18sp" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/qualityList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
 
     <!-- Kanal listesi paneli -->
     <LinearLayout
