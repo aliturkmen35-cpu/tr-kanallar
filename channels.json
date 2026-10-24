@@ -1,6 +1,6 @@
 {
-  "version": 13,
-  "updated": "2026-10-24 17:22 UTC",
+  "version": 14,
+  "updated": "2026-10-24 22:14 UTC",
   "channels": [
     {
       "id": "trt1",
@@ -105,7 +105,7 @@
       "id": "dmax",
       "name": "DMAX",
       "category": "Ulusal",
-      "url": "https://dogus.daioncdn.net/dmax/dmax.m3u8?ce=3&app=5a02c599-d17e-4982-9b04-090934d51af7",
+      "url": "https://dogus.daioncdn.net/dmax/dmax.m3u8?ce=3&app=5a02c599-d17e-4982-9b04-090934d51af7&token=NENqZzJJOURUNXIvSCs2NWNEak1VWWt1VXEyenVKUGQreHZuanJMbERkTT0=",
       "headers": {
         "Referer": "https://www.dmax.com.tr/"
       },

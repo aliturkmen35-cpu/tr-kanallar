@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-24 19:39 UTC · 36/39 kanal erişilebilir
+Son kontrol: 2026-10-24 22:14 UTC · 40/42 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -16,6 +16,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TV8 | ✅ |  |
 | Kanal 7 | ✅ |  |
 | Teve2 | ✅ |  |
+| DMAX | ✅ | adres güncellendi |
 | 360 | ✅ |  |
 | TRT Haber | ✅ |  |
 | Habertürk | ✅ |  |
@@ -26,7 +27,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Çocuk | ✅ |  |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
@@ -46,3 +47,5 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TRT FM | ✅ |  |
 | TRT Radyo 1 | ✅ |  |
 | TRT Türkü | ✅ |  |
+| Pal Nostalji | ✅ |  |
+| Radyo 45'lik | ✅ |  |
