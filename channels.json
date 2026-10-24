@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -29,6 +29,17 @@
       },
       "page": "https://www.kanald.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/kanald/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "startv",
+      "name": "Star TV",
+      "category": "Ulusal",
+      "url": "https://dogus.daioncdn.net/startv/startv.m3u8?ce=3&app=a20ac41e-bdc3-4aa1-934d-26b484480ac9",
+      "headers": {
+        "Referer": "https://www.startv.com.tr/"
+      },
+      "page": "https://player-live.dygdigital.com/js/build.js",
+      "pattern": "Startv:\\{development:\\\"(https://dogus\\.daioncdn\\.net/startv/[^\\\"]+)\\\""
     },
     {
       "id": "nowtv",
@@ -102,6 +113,17 @@
       },
       "page": "https://www.haberturk.com/canliyayin",
       "pattern": "https://ciner\\.daioncdn\\.net/haberturktv/[^\\\"'<>\\s]+"
+    },
+    {
+      "id": "ntv",
+      "name": "NTV",
+      "category": "Haber",
+      "url": "https://dogus.daioncdn.net/ntv/ntv.m3u8?ce=3&&app=7c4bb802-0c41-409e-8cd2-799984995694",
+      "headers": {
+        "Referer": "https://www.ntv.com.tr/"
+      },
+      "page": "https://player-live.dygdigital.com/js/build.js",
+      "pattern": "https://dogus\\.daioncdn\\.net/ntv/ntv\\.m3u8\\?ce=3&&app=[^\\\"]+"
     },
     {
       "id": "ahaber",
