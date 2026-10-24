@@ -65,6 +65,34 @@ def works(url, headers):
         return False
 
 
+def youtube_is_live(video_id):
+    try:
+        _, page = fetch(f"https://www.youtube.com/watch?v={video_id}")
+        return '"isLive":true' in page
+    except Exception:
+        return None  # bilinmiyor
+
+
+def update_youtube(ch):
+    """Kanalın resmi YouTube canlı yayını bittiyse o anki canlı yayına geçer.
+    Yayın hâlâ canlıysa dokunmaz; böylece kanalın geçici özel yayınlarına atlamaz.
+    Değişiklik yaptıysa True döner."""
+    current = ch.get("youtube")
+    if current and youtube_is_live(current) is not False:
+        return False
+    try:
+        _, html = fetch(f"https://www.youtube.com/channel/{ch['youtubeChannel']}/live")
+    except Exception as e:
+        print(f"  YouTube kontrol edilemedi: {e}")
+        return False
+    m = re.search(r'<link rel="canonical" href="https://www\.youtube\.com/watch\?v=([\w-]{11})"', html)
+    if m and m.group(1) != current:
+        print(f"  YouTube canlı yayını değişti: {m.group(1)}")
+        ch["youtube"] = m.group(1)
+        return True
+    return False
+
+
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else "channels.json"
     status_path = sys.argv[2] if len(sys.argv) > 2 else "STATUS.md"
@@ -75,17 +103,8 @@ def main():
     for ch in data["channels"]:
         name, headers, old = ch["name"], ch.get("headers", {}), ch.get("url", "")
         print(f"- {name}")
-        # Resmi YouTube canlı yayınının video kimliği değiştiyse güncelle
-        if ch.get("youtubeChannel"):
-            try:
-                _, html = fetch(f"https://www.youtube.com/channel/{ch['youtubeChannel']}/live")
-                m = re.search(r'<link rel="canonical" href="https://www\.youtube\.com/watch\?v=([\w-]{11})"', html)
-                if m and m.group(1) != ch.get("youtube"):
-                    print(f"  YouTube canlı yayını değişti: {m.group(1)}")
-                    ch["youtube"] = m.group(1)
-                    changed = True
-            except Exception as e:
-                print(f"  YouTube kontrol edilemedi: {e}")
+        if ch.get("youtubeChannel") and update_youtube(ch):
+            changed = True
         if ch.get("resolveOnPlay"):
             # Adresi kısa süreli; uygulama her açılışta kendisi çözer. Burada yalnızca kontrol et.
             ok = works(resolve(ch), headers)
