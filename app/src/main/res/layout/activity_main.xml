@@ -14,6 +14,15 @@
         app:show_buffering="when_playing"
         app:resize_mode="fit" />
 
+    <!-- Kanalın resmi YouTube canlı yayını (yalnızca yedek olarak kullanılır) -->
+    <WebView
+        android:id="@+id/ytView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:visibility="gone" />
+
     <!-- Radyo çalarken arkada dönen şömine videosu (sessiz) -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/bgVideo"

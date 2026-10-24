@@ -75,6 +75,17 @@ def main():
     for ch in data["channels"]:
         name, headers, old = ch["name"], ch.get("headers", {}), ch.get("url", "")
         print(f"- {name}")
+        # Resmi YouTube canlı yayınının video kimliği değiştiyse güncelle
+        if ch.get("youtubeChannel"):
+            try:
+                _, html = fetch(f"https://www.youtube.com/channel/{ch['youtubeChannel']}/live")
+                m = re.search(r'<link rel="canonical" href="https://www\.youtube\.com/watch\?v=([\w-]{11})"', html)
+                if m and m.group(1) != ch.get("youtube"):
+                    print(f"  YouTube canlı yayını değişti: {m.group(1)}")
+                    ch["youtube"] = m.group(1)
+                    changed = True
+            except Exception as e:
+                print(f"  YouTube kontrol edilemedi: {e}")
         if ch.get("resolveOnPlay"):
             # Adresi kısa süreli; uygulama her açılışta kendisi çözer. Burada yalnızca kontrol et.
             ok = works(resolve(ch), headers)

@@ -80,6 +80,7 @@ class ChannelRepository(private val context: Context) {
                 pattern = o.optString("pattern"),
                 type = o.optString("type", "tv"),
                 fallbackUrl = o.optString("fallbackUrl"),
+                youtube = o.optString("youtube"),
             )
         }
     }

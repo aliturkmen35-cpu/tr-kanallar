@@ -81,6 +81,11 @@ class MainActivity : AppCompatActivity() {
         radioCard = findViewById(R.id.radioCard)
         radioName = findViewById(R.id.radioName)
         natureView = findViewById(R.id.natureView)
+        watermark = findViewById(R.id.watermark)
+        youTube = YouTubeLive(findViewById(R.id.ytView)) {
+            watermark.visibility = View.VISIBLE
+            showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
+        }
         bgVideo = findViewById(R.id.bgVideo)
         fireCredit = findViewById(R.id.fireCredit)
         qualityList.layoutManager = LinearLayoutManager(this)
@@ -173,6 +178,12 @@ class MainActivity : AppCompatActivity() {
                         usedFallback = true
                         startStream(ch, ch.fallbackUrl,
                             ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value ?: DEFAULT_UA)
+                    } else if (ch != null && ch.youtube.isNotBlank() && !usedYouTube) {
+                        // Son yedek: kanalın resmi YouTube canlı yayını
+                        usedYouTube = true
+                        player?.stop()
+                        watermark.visibility = View.GONE // YouTube oynatıcısının üstüne logo koymuyoruz
+                        youTube.play(ch.youtube)
                     } else {
                         showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
                     }
@@ -196,7 +207,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun play(index: Int, keepRetryFlag: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
-        if (!keepRetryFlag) { retried = false; usedFallback = false }
+        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false }
+        youTube.stop()
+        watermark.visibility = View.VISIBLE
         current = index
         prefs.edit().putString("last", ch.id).apply()
         channelAdapter.selected = shownChannels.indexOf(index)
@@ -224,6 +237,9 @@ class MainActivity : AppCompatActivity() {
 
     private var playToken = 0
     private var usedFallback = false
+    private var usedYouTube = false
+    private lateinit var youTube: YouTubeLive
+    private lateinit var watermark: View
 
     private fun startStream(ch: Channel, url: String, userAgent: String) {
         if (url.isBlank()) {
@@ -501,6 +517,7 @@ class MainActivity : AppCompatActivity() {
         bgPlayer?.release()
         bgPlayer = null
         bgVideo.player = null
+        youTube.stop()
     }
 
     override fun onDestroy() {

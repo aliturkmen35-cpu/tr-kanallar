@@ -14,6 +14,8 @@ data class Channel(
     val type: String = "tv",
     /** Ana yayın açılmazsa denenecek yedek yayın (ör. ATV için ATV Avrupa). */
     val fallbackUrl: String = "",
+    /** Son yedek: kanalın resmi YouTube canlı yayınının video kimliği. */
+    val youtube: String = "",
 ) {
     val isRadio get() = type == "radio"
 }
