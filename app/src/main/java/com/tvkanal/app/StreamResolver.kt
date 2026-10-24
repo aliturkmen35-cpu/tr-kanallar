@@ -25,6 +25,7 @@ object StreamResolver {
                 ?.let { m -> m.groupValues.getOrNull(1)?.takeIf { it.isNotEmpty() } ?: m.value }
                 ?.replace("\\/", "/")
                 ?.replace("&amp;", "&")
+                ?.replace("\\u0026", "&")
         }.getOrNull() ?: ch.url
     }
 }

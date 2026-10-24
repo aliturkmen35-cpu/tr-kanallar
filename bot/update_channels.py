@@ -44,7 +44,7 @@ def resolve(ch):
     if not m:
         return None
     url = m.group(1) if m.groups() and m.group(1) else m.group(0)
-    return url.replace("\\/", "/").replace("&amp;", "&")
+    return url.replace("\\/", "/").replace("&amp;", "&").replace("\\u0026", "&")
 
 
 def works(url, headers):
