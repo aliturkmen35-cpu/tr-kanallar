@@ -259,8 +259,10 @@ class MainActivity : AppCompatActivity() {
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_CHANNEL_UP -> { step(+1); return true }
             KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_CHANNEL_DOWN -> { step(-1); return true }
-            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_MENU,
-            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
+            // OK tuşu: liste tuş bırakılınca açılır. Basılırken açılırsa, bırakma anı
+            // listedeki kanala "tıklama" sayılıp listeyi hemen kapatıyordu.
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { openOnKeyUp = true; return true }
+            KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
             KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_INFO -> {
                 if (current >= 0) showInfo(current); return true
             }
@@ -278,6 +280,17 @@ class MainActivity : AppCompatActivity() {
             numberInput(keyCode - KeyEvent.KEYCODE_0); return true
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    private var openOnKeyUp = false
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
+        if (openOnKeyUp && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
+            openOnKeyUp = false
+            showList()
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
     }
 
     // Kumandada rakam tuşu varsa kanal numarasıyla geçiş

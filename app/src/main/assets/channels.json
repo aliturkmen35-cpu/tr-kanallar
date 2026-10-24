@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -7,6 +7,18 @@
       "name": "TRT 1",
       "category": "Ulusal",
       "url": "https://tv-trt1.medya.trt.com.tr/master.m3u8"
+    },
+    {
+      "id": "atv",
+      "name": "ATV",
+      "category": "Ulusal",
+      "url": "https://trkvz-live.ercdn.net/atvhd/atvhd.m3u8",
+      "headers": {
+        "Referer": "https://www.atv.com.tr/"
+      },
+      "page": "https://videojs.tmgrup.com.tr/getvideo/0fe2a405-8afa-4238-b429-e5f96aec3a5c/00000000-0000-0000-0000-000000000000",
+      "pattern": "\\\"VideoUrl\\\":\\\"([^\\\"]+)\\\"",
+      "note": "Yalnızca Türkiye'den açılır"
     },
     {
       "id": "showtv",
