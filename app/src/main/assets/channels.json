@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -29,7 +29,10 @@
       },
       "page": "https://www.showtv.com.tr/canli-yayin",
       "pattern": "https://ciner\\.daioncdn\\.net/showtv/[^\\\"'<>\\s]+",
-      "iptv": "ShowTV.tr"
+      "iptv": "ShowTV.tr",
+      "youtube": "WxeHEn5N1vk",
+      "youtubeChannel": "UC9JMe_We017gYrRc7kZHgmg",
+      "webYoutube": true
     },
     {
       "id": "kanald",
@@ -41,7 +44,10 @@
       },
       "page": "https://www.kanald.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/kanald/[^\\\"'<>\\s]+",
-      "iptv": "KanalD.tr"
+      "iptv": "KanalD.tr",
+      "youtube": "b94j0fwsPGQ",
+      "youtubeChannel": "UCFoe1tg8MuHjRzmqXtV816A",
+      "webYoutube": true
     },
     {
       "id": "startv",
@@ -53,7 +59,8 @@
       },
       "page": "https://player-live.dygdigital.com/js/build.js",
       "pattern": "Startv:\\{development:\\\"(https://dogus\\.daioncdn\\.net/startv/[^\\\"]+)\\\"",
-      "iptv": "StarTV.tr"
+      "iptv": "StarTV.tr",
+      "web": false
     },
     {
       "id": "nowtv",
@@ -72,7 +79,8 @@
       },
       "page": "https://www.tv8.com.tr/canli-yayin",
       "pattern": "https://tv8\\.daioncdn\\.net/[^\\\"'<>\\s]+",
-      "iptv": "TV8.tr"
+      "iptv": "TV8.tr",
+      "web": false
     },
     {
       "id": "kanal7",
@@ -85,7 +93,8 @@
       "page": "https://www.kanal7.com/canli-yayin-iframe.php",
       "pattern": "https://kanal7\\.daioncdn\\.net/[^\\\"'<>\\s]+",
       "iptv": "Kanal7.tr",
-      "fallbackUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8"
+      "fallbackUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8",
+      "webUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8"
     },
     {
       "id": "teve2",
@@ -97,7 +106,8 @@
       },
       "page": "https://www.teve2.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/teve2/[^\\\"'<>\\s]+",
-      "iptv": "Teve2.tr"
+      "iptv": "Teve2.tr",
+      "web": false
     },
     {
       "id": "natgeo",
@@ -146,7 +156,8 @@
       },
       "page": "https://www.haberturk.com/canliyayin",
       "pattern": "https://ciner\\.daioncdn\\.net/haberturktv/[^\\\"'<>\\s]+",
-      "iptv": "HaberturkTV.tr"
+      "iptv": "HaberturkTV.tr",
+      "web": false
     },
     {
       "id": "ntv",
@@ -159,7 +170,10 @@
       "page": "https://player-live.dygdigital.com/js/build.js",
       "pattern": "https://dogus\\.daioncdn\\.net/ntv/ntv\\.m3u8\\?ce=3&&app=[^\\\"]+",
       "iptv": "NTV.tr",
-      "fallbackUrl": "https://dogus.daioncdn.net/ntv/ntv.m3u8?app=ntv_web"
+      "fallbackUrl": "https://dogus.daioncdn.net/ntv/ntv.m3u8?app=ntv_web",
+      "youtube": "pqq5c6k70kk",
+      "youtubeChannel": "UC9TDTjbOjFB9jADmPhSAPsw",
+      "webYoutube": true
     },
     {
       "id": "cnnturk",
@@ -174,7 +188,8 @@
       "note": "Türkiye'den kendi yayını; açılmazsa CNN Türk'ün resmi YouTube canlı yayını",
       "youtube": "6N8_r2uwLEc",
       "youtubeChannel": "UCV6zcRug6Hqp1UX_FdyUeBg",
-      "iptv": "CNNTurk.tr"
+      "iptv": "CNNTurk.tr",
+      "webYoutube": true
     },
     {
       "id": "halktv",
@@ -187,7 +202,8 @@
       "page": "https://halktv.com.tr/canli-yayin",
       "pattern": "https:[\\\\/]+halktv\\.daioncdn\\.net[^\\\"'<>\\s]+",
       "iptv": "HalkTV.tr",
-      "fallbackUrl": "https://halktv-live.daioncdn.net/halktv/halktv.m3u8"
+      "fallbackUrl": "https://halktv-live.daioncdn.net/halktv/halktv.m3u8",
+      "webUrl": "https://halktv-live.daioncdn.net/halktv/halktv.m3u8"
     },
     {
       "id": "ahaber",
@@ -282,21 +298,25 @@
       "name": "A2",
       "category": "Ulusal",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/a2tv/a2tv.m3u8",
-      "iptv": "A2TV.tr"
+      "iptv": "A2TV.tr",
+      "youtube": "UPKASvgEYFY",
+      "youtubeChannel": "UCNcexIxh3KbJUQYeh9FeSUA"
     },
     {
       "id": "eurod",
       "name": "Euro D",
       "category": "Ulusal",
       "url": "https://live.duhnet.tv/S2/HLS_LIVE/eurodnp/playlist.m3u8",
-      "iptv": "EuroD.tr"
+      "iptv": "EuroD.tr",
+      "web": false
     },
     {
       "id": "dreamturk",
       "name": "Dream Türk",
       "category": "Müzik",
       "url": "https://live.duhnet.tv/S2/HLS_LIVE/dreamturknp/playlist.m3u8",
-      "iptv": "DreamTurk.tr"
+      "iptv": "DreamTurk.tr",
+      "web": false
     },
     {
       "id": "powerturktv",
@@ -331,7 +351,10 @@
       "name": "HT Spor",
       "category": "Spor",
       "url": "https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web",
-      "iptv": "HTSporTV.tr"
+      "iptv": "HTSporTV.tr",
+      "youtube": "gcWaPe_LBMc",
+      "youtubeChannel": "UCK3mI2lsk3LSo8PBUc8JTSw",
+      "webYoutube": true
     },
     {
       "id": "minikacocuk",

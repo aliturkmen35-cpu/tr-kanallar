@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alin's TV</title>
+<meta name="description" content="Alin's: Türk TV kanalları ve radyolar, internet tarayıcısından.">
+<link rel="icon" href="web/icon.png">
+<style>
+  :root{--bg:#0E1116;--panel:rgba(20,26,34,.92);--accent:#E30A17;--text:#fff;--dim:#9AA4B2;--focus:rgba(255,255,255,.14)}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#000;color:var(--text);font-family:Roboto,"Segoe UI",Arial,sans-serif;overflow:hidden}
+  #stage,#video,#yt,#fire,#scrim{position:fixed;left:0;top:0;width:100%;height:100%}
+  #video{background:#000;object-fit:contain}
+  #yt{border:0;display:none;background:#000}
+  #fire{object-fit:cover;display:none}
+  #scrim{background:rgba(0,0,0,.35);display:none}
+  #credit{position:fixed;right:16px;bottom:12px;font-size:12px;opacity:.55;display:none}
+  #radio{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;display:none}
+  #radio img{width:140px;height:140px}
+  #radioName{font-size:44px;font-weight:700;margin-top:24px;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+  #radioSub{color:var(--dim);letter-spacing:.15em;margin-top:8px;font-size:18px}
+  #mark{position:fixed;top:32px;right:40px;height:22px;opacity:.38;pointer-events:none}
+  #info{position:fixed;left:40px;bottom:40px;background:var(--panel);border-radius:10px;padding:16px 20px;font-size:28px;display:none}
+  #info b{color:var(--accent);margin-right:16px}
+  #status{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--panel);border-radius:10px;padding:20px 26px;font-size:22px;text-align:center;display:none;max-width:90%}
+  #spinner{position:fixed;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:4px solid rgba(227,10,23,.25);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite;display:none}
+  @keyframes s{to{transform:rotate(360deg)}}
+  #list{position:fixed;left:0;top:0;bottom:0;width:440px;max-width:100%;background:var(--panel);padding:32px 24px;overflow-y:auto;display:none}
+  .row{display:flex;align-items:center;padding:14px 16px;border-radius:10px;font-size:26px;cursor:pointer;margin-bottom:4px}
+  .row span{color:var(--dim);width:64px;flex:none;font-size:22px}
+  .row.sel{background:var(--focus)}
+  .row.on{background:var(--accent)}
+  .row.on span{color:#fff}
+  #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);text-align:center;padding:16px}
+  #start img{width:120px;height:120px}
+  #start h1{font-size:44px;margin:20px 0 8px}
+  #start p{color:var(--dim);font-size:20px;margin:6px 0}
+  #start button{margin-top:28px;font-size:26px;padding:16px 44px;border:0;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer}
+  #start button:focus{outline:4px solid #fff}
+  @media (max-width:700px){#list{width:100%}.row{font-size:20px}#info{left:16px;right:16px;bottom:16px;font-size:20px}#mark{top:16px;right:16px}#radioName{font-size:30px}#start h1{font-size:32px}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <video id="video" playsinline autoplay></video>
+  <iframe id="yt" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+  <video id="fire" src="web/fireplace.webm" muted loop playsinline preload="none"></video>
+  <div id="scrim"></div>
+  <div id="credit">Şömine videosu: Larvis, CC BY-SA 4.0, Wikimedia Commons</div>
+  <div id="radio"><img src="web/radio_logo.png" alt=""><div id="radioName"></div><div id="radioSub">RADYO · CANLI</div></div>
+</div>
+<img id="mark" src="web/watermark.png" alt="">
+<div id="info"><b id="infoNum"></b><span id="infoName"></span></div>
+<div id="spinner"></div>
+<div id="status"></div>
+<div id="list"></div>
+<div id="start">
+  <img src="web/radio_logo.png" alt="">
+  <h1>Alin's</h1>
+  <p>Türk TV kanalları ve radyolar</p>
+  <p>Kumanda: ▲ ▼ kanal · OK liste · rakamlar kanal no</p>
+  <button id="go">İzlemeye başla</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+<script>
+(function () {
+  var LIST_URL = "channels.json";
+  var $ = function (id) { return document.getElementById(id); };
+  var video = $("video"), yt = $("yt"), fire = $("fire");
+  var channels = [], cur = -1, sel = 0, hls = null, token = 0, infoTimer = null, numBuf = "", numTimer = null;
+
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+
+  function load() {
+    var x = new XMLHttpRequest();
+    x.open("GET", LIST_URL + "?t=" + Math.floor(Date.now() / 60000));
+    x.onload = function () {
+      try {
+        var all = JSON.parse(x.responseText).channels;
+        channels = all.filter(function (c) { return c.enabled !== false && c.web !== false && (c.url || c.youtube); });
+      } catch (e) { channels = []; }
+      buildList();
+      var last = store("last"), i = 0;
+      for (var k = 0; k < channels.length; k++) if (channels[k].id === last) i = k;
+      var sc = parseInt(store("startCh") || "", 10);
+      if (sc > 0 && sc <= channels.length) { i = sc - 1; store("startCh", ""); }
+      play(i);
+    };
+    x.onerror = function () { status("Kanal listesi yüklenemedi. İnternet bağlantısını kontrol edin."); };
+    x.send();
+  }
+
+  function buildList() {
+    var l = $("list"); l.innerHTML = "";
+    channels.forEach(function (c, i) {
+      var r = document.createElement("div");
+      r.className = "row"; r.innerHTML = "<span>" + (i + 1) + "</span>" + c.name.replace(/</g, "&lt;");
+      r.onclick = function () { play(i); hideList(); };
+      l.appendChild(r);
+    });
+  }
+  function rows() { return $("list").children; }
+  function paintList() {
+    var r = rows();
+    for (var i = 0; i < r.length; i++) r[i].className = "row" + (i === cur ? " on" : "") + (i === sel ? " sel" : "");
+    if (r[sel]) r[sel].scrollIntoView({ block: "nearest" });
+  }
+  function listOpen() { return $("list").style.display === "block"; }
+  function showList() { sel = cur < 0 ? 0 : cur; $("list").style.display = "block"; paintList(); }
+  function hideList() { $("list").style.display = "none"; }
+
+  function show(id, on) { $(id).style.display = on ? "block" : "none"; }
+  function status(t) { $("status").innerHTML = t ? t.replace(/\n/g, "<br>") : ""; show("status", !!t); if (t) show("spinner", false); }
+
+  function info(i) {
+    $("infoNum").textContent = i + 1; $("infoName").textContent = channels[i].name;
+    show("info", true); clearTimeout(infoTimer);
+    infoTimer = setTimeout(function () { show("info", false); }, 4000);
+  }
+
+  function stopAll() {
+    if (hls) { hls.destroy(); hls = null; }
+    video.removeAttribute("src"); try { video.load(); } catch (e) {}
+    yt.src = "about:blank"; yt.style.display = "none";
+    $("mark").style.display = "block";
+  }
+
+  function radioUi(c) {
+    var r = c.type === "radio";
+    show("radio", r); show("scrim", r); show("credit", r);
+    fire.style.display = r ? "block" : "none";
+    if (r) { $("radioName").textContent = c.name; var p = fire.play(); if (p && p.catch) p.catch(function () {}); } else fire.pause();
+    video.style.visibility = r ? "hidden" : "visible";
+  }
+
+  function play(i) {
+    video.onerror = video.onended = video.ontimeupdate = null;
+    if (i < 0 || i >= channels.length) return;
+    var c = channels[i], my = ++token;
+    cur = i; store("last", c.id); stopAll(); status(""); radioUi(c); info(i);
+    var urls = [];
+    if (!c.webYoutube) {
+      if (c.webUrl) urls.push(c.webUrl);
+      if (c.url) urls.push(c.url);
+      if (c.fallbackUrl) urls.push(c.fallbackUrl);
+    }
+    tryUrls(c, urls, 0, my);
+  }
+
+  function tryUrls(c, urls, k, my) {
+    if (my !== token) return;
+    if (k >= urls.length) {
+      if (c.youtube) return playYouTube(c);
+      return status(c.name + " şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)");
+    }
+    var url = urls[k], next = function () { tryUrls(c, urls, k + 1, my); };
+    show("spinner", true);
+    var isHls = /\.m3u8|playlist|master/i.test(url) && !/icecast|\.mp3|\.aac/i.test(url);
+    if (isHls && window.Hls && Hls.isSupported()) {
+      if (hls) hls.destroy();
+      hls = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 30, startLevel: -1, fragLoadingMaxRetry: 4, manifestLoadingMaxRetry: 2 });
+      hls.on(Hls.Events.ERROR, function (e, d) {
+        if (my !== token || !d.fatal) return;
+        if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { hls.recoverMediaError(); return; }
+        hls.destroy(); hls = null; next();
+      });
+      hls.loadSource(url); hls.attachMedia(video);
+    } else {
+      var played = false;
+      video.src = url;
+      video.onerror = function () {
+        if (my !== token) return;
+        // Radyo çalarken bağlantı koptuysa aynı radyoya yeniden bağlan
+        if (played && c.type === "radio") setTimeout(function () { if (my === token) play(cur); }, 1500);
+        else next();
+      };
+      video.onended = function () { if (my === token && c.type === "radio") setTimeout(function () { if (my === token) play(cur); }, 500); };
+      video.ontimeupdate = function () { played = true; };
+    }
+    video.onplaying = function () { if (my === token) show("spinner", false); };
+    var p = video.play(); if (p && p.catch) p.catch(function () {});
+  }
+
+  function playYouTube(c) {
+    if (hls) { hls.destroy(); hls = null; }
+    show("spinner", false); $("mark").style.display = "none";
+    yt.style.display = "block";
+    yt.src = "https://www.youtube.com/embed/" + c.youtube + "?autoplay=1&controls=0&rel=0&playsinline=1&modestbranding=1";
+  }
+
+  function step(d) { if (channels.length) play((cur + d + channels.length) % channels.length); }
+
+  document.addEventListener("keydown", function (e) {
+    if ($("start").style.display !== "none") return;
+    var k = e.keyCode;
+    if (listOpen()) {
+      if (k === 38) { sel = Math.max(0, sel - 1); paintList(); }
+      else if (k === 40) { sel = Math.min(channels.length - 1, sel + 1); paintList(); }
+      else if (k === 13) { play(sel); hideList(); }
+      else if (k === 8 || k === 27 || k === 10009 || k === 461 || k === 39) hideList();
+      else return;
+      e.preventDefault(); return;
+    }
+    if (k === 38 || k === 33 || k === 427) step(-1);
+    else if (k === 40 || k === 34 || k === 428) step(1);
+    else if (k === 13 || k === 37) showList();
+    else if (k >= 48 && k <= 57) {
+      numBuf += String(k - 48); clearTimeout(numTimer);
+      $("infoNum").textContent = numBuf; $("infoName").textContent = ""; show("info", true);
+      numTimer = setTimeout(function () { var n = parseInt(numBuf, 10) - 1; numBuf = ""; if (n >= 0 && n < channels.length) play(n); }, 1500);
+    } else return;
+    e.preventDefault();
+  });
+
+  $("stage").onclick = function () { if (!listOpen()) showList(); else hideList(); };
+
+  $("go").onclick = function () {
+    if ($("start").style.display === "none") return;
+    $("start").style.display = "none";
+    var el = document.documentElement, fs = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (fs) try { fs.call(el); } catch (e) {}
+    load();
+  };
+  $("go").focus();
+  // Adres sonuna ?ch=5 gibi eklenirse doğrudan o kanalla başlar (TV yer imi için)
+  var m = /[?&]ch=(\d+)/.exec(location.search);
+  if (m) store("startCh", m[1]);
+  if (/[?&]auto/.test(location.search)) $("go").click();
+  document.addEventListener("keydown", function (e) { if ($("start").style.display !== "none" && e.keyCode === 13) $("go").click(); });
+})();
+</script>
+</body>
+</html>
