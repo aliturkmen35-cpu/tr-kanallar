@@ -47,6 +47,34 @@ def resolve(ch):
     return url.replace("\\/", "/").replace("&amp;", "&").replace("\\u0026", "&")
 
 
+IPTV_ORG = "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/tr.m3u"
+# Yalnızca kanalların kendi sunucuları ve bilinen Türk yayın altyapıları.
+# iptv-org'daki korsan/yeniden yayın sitelerinden gelen adresler asla kullanılmaz.
+TRUSTED = re.compile(r"^https://([\w.-]+\.)?(trt\.com\.tr|daioncdn\.net|ercdn\.net|duhnet\.tv|"
+                     r"powerapp\.com\.tr|mediatriple\.net|tgrthaber\.com|radyotvonline\.net)/")
+
+
+def load_iptv_org():
+    """iptv-org Türkiye listesini okur: {tvg-id: [adres, ...]} (yalnızca güvenilir sunucular)."""
+    out = {}
+    try:
+        _, text = fetch(IPTV_ORG)
+    except Exception as e:
+        print(f"iptv-org okunamadı: {e}")
+        return out
+    tid = None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("#EXTINF"):
+            m = re.search(r'tvg-id="([^"@]*)', line)
+            tid = m.group(1) if m else None
+        elif line and not line.startswith("#"):
+            if tid and TRUSTED.match(line):
+                out.setdefault(tid, []).append(line)
+            tid = None
+    return out
+
+
 def works(url, headers):
     """Yayın listesi (#EXTM3U) ya da radyolar için doğrudan ses akışı dönüyorsa çalışıyor sayılır."""
     if not url:
@@ -100,6 +128,7 @@ def main():
         data = json.load(f)
 
     rows, changed = [], False
+    iptv = load_iptv_org()
     for ch in data["channels"]:
         name, headers, old = ch["name"], ch.get("headers", {}), ch.get("url", "")
         print(f"- {name}")
@@ -128,7 +157,14 @@ def main():
             changed = True
             rows.append((name, True, "adres güncellendi"))
         else:
-            rows.append((name, False, "yurt dışından erişilemedi ya da yayın kapalı"))
+            # Son çare: iptv-org'daki resmi adresi dene
+            alt = next((u for u in iptv.get(ch.get("iptv", ""), []) if u != old and works(u, headers)), None)
+            if alt:
+                ch["url"] = alt
+                changed = True
+                rows.append((name, True, "adres iptv-org'dan güncellendi"))
+            else:
+                rows.append((name, False, "yurt dışından erişilemedi ya da yayın kapalı"))
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     if changed:
