@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-25 05:06 UTC · 37/42 kanal erişilebilir
+Son kontrol: 2026-10-25 10:00 UTC · 55/56 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -8,30 +8,44 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Kanal | Durum | Not |
 |---|---|---|
 | TRT 1 | ✅ |  |
-| ATV | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| ATV | ✅ |  |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
 | Star TV | ✅ |  |
-| NOW | ✅ | uygulama her açılışta güncel adresi okuyor |
+| NOW | ✅ |  |
 | TV8 | ✅ |  |
 | Kanal 7 | ✅ |  |
 | Teve2 | ✅ |  |
-| DMAX | ✅ | adres güncellendi |
+| National Geographic | ✅ | resmi YouTube canlı yayını |
+| Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Haber | ✅ |  |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Halk TV | ✅ |  |
-| A Haber | ✅ |  |
+| A Haber | ✅ | adres güncellendi |
 | TGRT Haber | ✅ |  |
-| TRT World | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Çocuk | ✅ |  |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
+| TRT 2 | ✅ |  |
+| TRT Genç | ✅ |  |
+| A2 | ✅ |  |
+| Euro D | ✅ |  |
+| Dream Türk | ✅ |  |
+| Power Türk TV | ✅ |  |
+| Number 1 TV | ✅ |  |
+| CNBC-e | ✅ |  |
+| 24 TV | ✅ |  |
+| HT Spor | ✅ |  |
+| Minika Çocuk | ✅ |  |
+| Minika Go | ✅ |  |
+| Diyanet TV | ✅ |  |
 | Power Türk | ✅ |  |
 | Power FM | ✅ |  |
 | Joy Türk | ✅ |  |

@@ -1,6 +1,6 @@
 {
-  "version": 19,
-  "updated": "2026-10-25 05:06 UTC",
+  "version": 20,
+  "updated": "2026-10-25 10:00 UTC",
   "channels": [
     {
       "id": "trt1",
@@ -193,7 +193,7 @@
       "id": "ahaber",
       "name": "A Haber",
       "category": "Haber",
-      "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/ahaber/ahaber.m3u8",
+      "url": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8",
       "headers": {
         "Referer": "https://www.ahaber.com.tr/"
       },
