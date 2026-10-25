@@ -55,6 +55,7 @@
 <div id="spinner"></div>
 <div id="status"></div>
 <div id="list"></div>
+<div id="dbg" style="position:fixed;left:8px;top:8px;font:16px monospace;background:rgba(0,0,0,.7);padding:6px 10px;display:none;white-space:pre"></div>
 <div id="start">
   <img src="web/radio_logo.png" alt="">
   <h1>Alin's</h1>
@@ -163,6 +164,7 @@
       hls = new Hls({ capLevelToPlayerSize: true, maxBufferLength: 30, startLevel: -1, fragLoadingMaxRetry: 4, manifestLoadingMaxRetry: 2 });
       hls.on(Hls.Events.ERROR, function (e, d) {
         if (my !== token || !d.fatal) return;
+        lastErr = d.type + " " + d.details;
         if (d.type === Hls.ErrorTypes.MEDIA_ERROR) { hls.recoverMediaError(); return; }
         hls.destroy(); hls = null; next();
       });
@@ -172,6 +174,7 @@
       video.src = url;
       video.onerror = function () {
         if (my !== token) return;
+        lastErr = "video " + (video.error ? video.error.code : "?");
         // Radyo çalarken bağlantı koptuysa aynı radyoya yeniden bağlan
         if (played && c.type === "radio") setTimeout(function () { if (my === token) play(cur); }, 1500);
         else next();
@@ -187,8 +190,24 @@
     if (hls) { hls.destroy(); hls = null; }
     show("spinner", false); $("mark").style.display = "none";
     yt.style.display = "block";
-    yt.src = "https://www.youtube.com/embed/" + c.youtube + "?autoplay=1&controls=0&rel=0&playsinline=1&modestbranding=1";
+    ytTime = 0; lastErr = "";
+    yt.src = "https://www.youtube.com/embed/" + c.youtube + "?autoplay=1&controls=0&rel=0&playsinline=1&modestbranding=1&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
   }
+  // YouTube oynatıcısıyla konuş: sesi aç, hata olursa haber al
+  var ytTime = 0, lastErr = "";
+  function ytCmd(func) { try { yt.contentWindow.postMessage(JSON.stringify({ event: "command", func: func, args: [] }), "*"); } catch (e) {} }
+  yt.onload = function () {
+    if (yt.style.display === "none") return;
+    try { yt.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1, channel: "widget" }), "*"); } catch (e) {}
+    setTimeout(function () { ytCmd("unMute"); ytCmd("playVideo"); }, 1500);
+  };
+  window.addEventListener("message", function (e) {
+    if (String(e.origin).indexOf("youtube.com") < 0) return;
+    var d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+    if (!d) return;
+    if (d.event === "onError") { lastErr = "youtube " + d.info; status((channels[cur] ? channels[cur].name : "Kanal") + " şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)"); }
+    if (d.info && typeof d.info.currentTime === "number") ytTime = d.info.currentTime;
+  });
 
   function step(d) { if (channels.length) play((cur + d + channels.length) % channels.length); }
 
@@ -224,6 +243,18 @@
     load();
   };
   $("go").focus();
+  if (/[?&]debug/.test(location.search)) {
+    $("dbg").style.display = "block";
+    setInterval(function () {
+      var c = channels[cur] || {};
+      var lv = hls && hls.levels && hls.levels[hls.currentLevel];
+      $("dbg").textContent = "kanal: " + (cur + 1) + " " + (c.name || "") +
+        "\nmod: " + (yt.style.display === "block" ? "youtube" : (hls ? "hls" : "dogrudan")) +
+        "\nvideo süre: " + video.currentTime.toFixed(1) + "  durum: " + video.readyState +
+        "\nkalite: " + (lv ? lv.height + "p" : "-") + "\nyoutube süre: " + ytTime.toFixed(1) +
+        "\nşömine: " + fire.currentTime.toFixed(1) + "\nhata: " + lastErr;
+    }, 1000);
+  }
   // Adres sonuna ?ch=5 gibi eklenirse doğrudan o kanalla başlar (TV yer imi için)
   var m = /[?&]ch=(\d+)/.exec(location.search);
   if (m) store("startCh", m[1]);
