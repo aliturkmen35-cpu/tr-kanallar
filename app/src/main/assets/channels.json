@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 16,
   "updated": "2026-10-24 17:22 UTC",
   "channels": [
     {
@@ -59,14 +59,8 @@
       "id": "nowtv",
       "name": "NOW",
       "category": "Ulusal",
-      "url": "",
-      "page": "https://www.nowtv.com.tr/canli-yayin",
-      "pattern": "https://nowtv\\.daioncdn\\.net/[^\\\"'<>\\s]+",
-      "headers": {
-        "Referer": "https://www.nowtv.com.tr/"
-      },
-      "resolveOnPlay": true,
-      "iptv": "NOW.tr"
+      "url": "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8",
+      "iptv": "NOWTV.tr"
     },
     {
       "id": "tv8",
@@ -90,7 +84,8 @@
       },
       "page": "https://www.kanal7.com/canli-yayin-iframe.php",
       "pattern": "https://kanal7\\.daioncdn\\.net/[^\\\"'<>\\s]+",
-      "iptv": "Kanal7.tr"
+      "iptv": "Kanal7.tr",
+      "fallbackUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8"
     },
     {
       "id": "teve2",
@@ -163,7 +158,8 @@
       },
       "page": "https://player-live.dygdigital.com/js/build.js",
       "pattern": "https://dogus\\.daioncdn\\.net/ntv/ntv\\.m3u8\\?ce=3&&app=[^\\\"]+",
-      "iptv": "NTV.tr"
+      "iptv": "NTV.tr",
+      "fallbackUrl": "https://dogus.daioncdn.net/ntv/ntv.m3u8?app=ntv_web"
     },
     {
       "id": "cnnturk",
@@ -190,19 +186,21 @@
       },
       "page": "https://halktv.com.tr/canli-yayin",
       "pattern": "https:[\\\\/]+halktv\\.daioncdn\\.net[^\\\"'<>\\s]+",
-      "iptv": "HalkTV.tr"
+      "iptv": "HalkTV.tr",
+      "fallbackUrl": "https://halktv-live.daioncdn.net/halktv/halktv.m3u8"
     },
     {
       "id": "ahaber",
       "name": "A Haber",
       "category": "Haber",
-      "url": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8",
+      "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/ahaber/ahaber.m3u8",
       "headers": {
         "Referer": "https://www.ahaber.com.tr/"
       },
       "page": "https://videojs.tmgrup.com.tr/getvideo/c0fbbd0d-b4cb-4e5b-b516-9993b9e506c3/00000000-0000-0000-0000-000000000000",
       "pattern": "\\\"VideoUrl\\\":\\\"([^\\\"]+)\\\"",
-      "iptv": "AHaber.tr"
+      "iptv": "AHaber.tr",
+      "fallbackUrl": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8"
     },
     {
       "id": "tgrthaber",
