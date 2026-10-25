@@ -36,7 +36,7 @@ class YouTubeLive(private val web: WebView, private val onFail: () -> Unit) {
                 new YT.Player('p',{width:'100%',height:'100%',videoId:'$videoId',
                   playerVars:{autoplay:1,controls:0,rel:0,playsinline:1,origin:'https://alins.tv'},
                   events:{
-                    onReady:function(e){e.target.playVideo();},
+                    onReady:function(e){e.target.unMute();e.target.setVolume(100);e.target.playVideo();},
                     onError:function(e){Alins.fail(String(e.data));}
                   }});
               }

@@ -177,6 +177,10 @@ class MainActivity : AppCompatActivity() {
                     // İnternet yavaşlasa da 480p'nin altına düşme
                     // (yayında 480p ve üstü yoksa en yakın kalite kullanılır)
                     .setMinVideoSize(0, 480)
+                    // Ses: birden fazla dil varsa Türkçe, en çok kanallı (stereo/5.1) ve en yüksek kaliteli ses izi
+                    .setPreferredAudioLanguages("tr", "tur")
+                    .setMaxAudioChannelCount(Int.MAX_VALUE)
+                    .setMaxAudioBitrate(Int.MAX_VALUE)
             )
         }
         // İlk saniyelerde düşük kaliteden başlamasın diye TV'ye uygun bir başlangıç hızı tahmini
@@ -325,7 +329,10 @@ class MainActivity : AppCompatActivity() {
         val p = ensurePlayer()
         // Önceki kanalın kalite seçimi yeni kanala taşınmasın
         p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
-            .clearOverridesOfType(C.TRACK_TYPE_VIDEO).build()
+            .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+            // Radyoda görüntü yok: internet ne olursa olsun hep en yüksek ses kalitesini çal
+            .setForceHighestSupportedBitrate(ch.isRadio)
+            .build()
         radioCard.visibility = if (ch.isRadio) View.VISIBLE else View.GONE
         updateRadioBackground(ch.isRadio)
         radioName.text = ch.name
