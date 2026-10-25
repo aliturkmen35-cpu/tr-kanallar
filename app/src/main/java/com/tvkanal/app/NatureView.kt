@@ -27,7 +27,8 @@ class NatureView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     private var t = 0f // saniye
-    private val animator = ValueAnimator.ofFloat(0f, 1f).apply {
+    // Android 5-6 onVisibilityChanged'i bu alan hazırlanmadan çağırır; bu yüzden boş olabilir
+    private val animator: ValueAnimator? = ValueAnimator.ofFloat(0f, 1f).apply {
         duration = 1000
         repeatCount = ValueAnimator.INFINITE
         interpolator = LinearInterpolator()
@@ -62,12 +63,12 @@ class NatureView @JvmOverloads constructor(
         )
     }
 
-    override fun onAttachedToWindow() { super.onAttachedToWindow(); animator.start() }
-    override fun onDetachedFromWindow() { animator.cancel(); super.onDetachedFromWindow() }
+    override fun onAttachedToWindow() { super.onAttachedToWindow(); animator?.start() }
+    override fun onDetachedFromWindow() { animator?.cancel(); super.onDetachedFromWindow() }
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
-        if (visibility == VISIBLE && isAttachedToWindow) animator.start() else animator.cancel()
+        if (visibility == VISIBLE && isAttachedToWindow) animator?.start() else animator?.cancel()
     }
 
     override fun onDraw(canvas: Canvas) {

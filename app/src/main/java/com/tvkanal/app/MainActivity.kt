@@ -24,6 +24,7 @@ import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
     })
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        TrustFix.install(this) // eski Android TV'lerde yeni sertifikalar
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_main)
@@ -191,7 +193,9 @@ class MainActivity : AppCompatActivity() {
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(20_000, 60_000, 2_500, 5_000)
             .build()
-        return ExoPlayer.Builder(this)
+        // TV'nin bir görüntü çözücüsü yayını açamazsa diğer çözücüyü dene (eski/ucuz TV'ler için)
+        val renderers = DefaultRenderersFactory(this).setEnableDecoderFallback(true)
+        return ExoPlayer.Builder(this, renderers)
             .setTrackSelector(trackSelector)
             .setBandwidthMeter(bandwidthMeter)
             .setLoadControl(loadControl)
@@ -267,6 +271,11 @@ class MainActivity : AppCompatActivity() {
         if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0 }
         youTube.stop()
         watermark.visibility = View.VISIBLE
+        if (!ch.isRadio) {
+            // Radyodan TV'ye geçerken radyo kartı/şömine YouTube kanallarının üstünde kalmasın
+            radioCard.visibility = View.GONE
+            updateRadioBackground(false)
+        }
         current = index
         prefs.edit().putString("last", ch.id).apply()
         channelAdapter.selected = shownChannels.indexOf(index)
@@ -334,6 +343,9 @@ class MainActivity : AppCompatActivity() {
             .setForceHighestSupportedBitrate(ch.isRadio)
             .build()
         radioCard.visibility = if (ch.isRadio) View.VISIBLE else View.GONE
+        // Radyoda TV görüntü yüzeyini kaldır: eski Android'lerde iki video yüzeyi üst üste
+        // binince şöminenin yerine önceki kanalın donmuş görüntüsü kalabiliyor
+        playerView.visibility = if (ch.isRadio) View.GONE else View.VISIBLE
         updateRadioBackground(ch.isRadio)
         radioName.text = ch.name
         val source = DefaultMediaSourceFactory(http).createMediaSource(MediaItem.fromUri(url))
@@ -353,13 +365,14 @@ class MainActivity : AppCompatActivity() {
     // ---- Radyo arka planı: şömine videosu ya da doğa manzarası ----
 
     private var bgPlayer: ExoPlayer? = null
+    private var fireUnsupported = false
 
     private var radioBg: String
         get() = prefs.getString("radioBg", "fire") ?: "fire"
         set(v) = prefs.edit().putString("radioBg", v).apply()
 
     private fun updateRadioBackground(isRadio: Boolean) {
-        val fire = isRadio && radioBg == "fire"
+        val fire = isRadio && radioBg == "fire" && !fireUnsupported
         natureView.visibility = if (isRadio && !fire) View.VISIBLE else View.GONE
         bgVideo.visibility = if (fire) View.VISIBLE else View.GONE
         fireCredit.visibility = bgVideo.visibility
@@ -372,6 +385,15 @@ class MainActivity : AppCompatActivity() {
                 // Şömine videosunun ses kanalını hiç açma: radyo sesiyle çakışmasın
                 bp.trackSelectionParameters = bp.trackSelectionParameters.buildUpon()
                     .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true).build()
+                // Eski TV bu videoyu çözemezse şömine yerine doğa manzarasını göster
+                bp.addListener(object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        fireUnsupported = true
+                        bgPlayer?.release()
+                        bgPlayer = null
+                        updateRadioBackground(channels.getOrNull(current)?.isRadio == true)
+                    }
+                })
                 bp.prepare()
                 bgVideo.player = bp
                 bgPlayer = bp
@@ -396,7 +418,13 @@ class MainActivity : AppCompatActivity() {
     private fun screenHeight(): Int {
         val d = if (Build.VERSION.SDK_INT >= 30) display
         else @Suppress("DEPRECATION") windowManager.defaultDisplay
-        val m = d?.mode ?: return 1080
+        if (d == null) return 1080
+        if (Build.VERSION.SDK_INT < 23) {
+            val pt = android.graphics.Point()
+            @Suppress("DEPRECATION") d.getRealSize(pt)
+            return minOf(pt.x, pt.y).coerceAtLeast(720)
+        }
+        val m = d.mode
         return minOf(m.physicalWidth, m.physicalHeight).coerceAtLeast(720)
     }
 
