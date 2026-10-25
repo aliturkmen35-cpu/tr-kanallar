@@ -105,6 +105,11 @@ def main():
         print(f"- {name}")
         if ch.get("youtubeChannel") and update_youtube(ch):
             changed = True
+        if not ch.get("url") and not ch.get("page"):
+            # Yalnızca resmi YouTube canlı yayını olan kanal
+            live = youtube_is_live(ch.get("youtube", "")) if ch.get("youtube") else False
+            rows.append((name, live is not False, "resmi YouTube canlı yayını"))
+            continue
         if ch.get("resolveOnPlay"):
             # Adresi kısa süreli; uygulama her açılışta kendisi çözer. Burada yalnızca kontrol et.
             ok = works(resolve(ch), headers)

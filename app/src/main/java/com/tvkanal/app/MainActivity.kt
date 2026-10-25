@@ -273,7 +273,9 @@ class MainActivity : AppCompatActivity() {
 
         // Bu kanal yakın zamanda yalnızca YouTube'dan açılabildiyse beklemeden oradan aç
         val ytSince = prefs.getLong("yt_${ch.id}", 0L)
-        if (ch.youtube.isNotBlank() && System.currentTimeMillis() - ytSince < 6 * 3600_000L) {
+        // Yalnızca resmi YouTube canlı yayını olan kanallar (ör. National Geographic) doğrudan oradan açılır
+        val youtubeOnly = ch.url.isBlank() && ch.page.isBlank() && ch.youtube.isNotBlank()
+        if (youtubeOnly || (ch.youtube.isNotBlank() && System.currentTimeMillis() - ytSince < 6 * 3600_000L)) {
             usedYouTube = true
             player?.stop()
             watermark.visibility = View.GONE

@@ -63,7 +63,7 @@ class ChannelRepository(private val context: Context) {
             if (!o.optBoolean("enabled", true)) return@mapNotNull null
             val url = o.optString("url")
             val page = o.optString("page")
-            if (url.isBlank() && page.isBlank()) return@mapNotNull null
+            if (url.isBlank() && page.isBlank() && o.optString("youtube").isBlank()) return@mapNotNull null
             val headers = mutableMapOf<String, String>()
             o.optJSONObject("headers")?.let { h ->
                 h.keys().forEach { k -> headers[k] = h.getString(k) }

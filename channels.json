@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 17,
   "updated": "2026-10-25 05:06 UTC",
   "channels": [
     {
@@ -102,16 +102,22 @@
       "pattern": "https://demiroren\\.daioncdn\\.net/teve2/[^\\\"'<>\\s]+"
     },
     {
-      "id": "dmax",
-      "name": "DMAX",
-      "category": "Ulusal",
-      "url": "https://dogus.daioncdn.net/dmax/dmax.m3u8?ce=3&app=5a02c599-d17e-4982-9b04-090934d51af7&token=ZjdpSHlqaUN0ckxzbUM3dkFUL25xODNvdTEydStFSjY3SWl5Ykg4V3hGMD0=",
-      "headers": {
-        "Referer": "https://www.dmax.com.tr/"
-      },
-      "page": "https://www.dmax.com.tr/canli-izle",
-      "pattern": "https://dogus\\.daioncdn\\.net/dmax/[^\\\"'<>\\s]+",
-      "note": "Yalnızca Türkiye'den açılır"
+      "id": "natgeo",
+      "name": "National Geographic",
+      "category": "Belgesel",
+      "url": "",
+      "youtube": "tbLcWRxPel0",
+      "youtubeChannel": "UCpVm7bg6pXKo1Pr6k5kxG9A",
+      "note": "Resmi YouTube canlı yayını (@NatGeo)"
+    },
+    {
+      "id": "natgeowild",
+      "name": "Nat Geo Wild",
+      "category": "Belgesel",
+      "url": "",
+      "youtube": "MiQe9ob9aDc",
+      "youtubeChannel": "UCDPk9MG2RexnOMGTD-YnSnA",
+      "note": "Resmi YouTube canlı yayını (@NatGeoAnimals)"
     },
     {
       "id": "tv360",
