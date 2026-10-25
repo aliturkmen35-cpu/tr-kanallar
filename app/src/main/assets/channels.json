@@ -336,21 +336,21 @@
       "name": "TRT FM",
       "category": "Radyo",
       "type": "radio",
-      "url": "https://radio-trtfm.live.trt.com.tr/master.m3u8"
+      "url": "https://rd-trtfm.medya.trt.com.tr/master.m3u8"
     },
     {
       "id": "r-trtradyo1",
       "name": "TRT Radyo 1",
       "category": "Radyo",
       "type": "radio",
-      "url": "https://radio-trtradyo1.live.trt.com.tr/master.m3u8"
+      "url": "https://rd-trtradyo1.medya.trt.com.tr/master.m3u8"
     },
     {
       "id": "r-trtturku",
       "name": "TRT Türkü",
       "category": "Radyo",
       "type": "radio",
-      "url": "https://radio-trtturku.live.trt.com.tr/master.m3u8"
+      "url": "https://rd-trtturku.medya.trt.com.tr/master.m3u8"
     },
     {
       "id": "r-palnostalji",
