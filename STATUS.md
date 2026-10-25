@@ -1,13 +1,13 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-25 00:27 UTC · 38/42 kanal erişilebilir
+Son kontrol: 2026-10-25 05:06 UTC · 37/42 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
 
 | Kanal | Durum | Not |
 |---|---|---|
-| TRT 1 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT 1 | ✅ |  |
 | ATV | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
@@ -18,14 +18,14 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Teve2 | ✅ |  |
 | DMAX | ✅ | adres güncellendi |
 | 360 | ✅ |  |
-| TRT Haber | ✅ |  |
+| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Halk TV | ✅ |  |
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
-| TRT World | ✅ |  |
+| TRT World | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Arabi | ✅ |  |
 | TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ✅ |  |
