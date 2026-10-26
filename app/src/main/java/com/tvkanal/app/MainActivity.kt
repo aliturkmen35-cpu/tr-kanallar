@@ -179,16 +179,23 @@ class MainActivity : AppCompatActivity() {
                     // İnternet yavaşlasa da 480p'nin altına düşme
                     // (yayında 480p ve üstü yoksa en yakın kalite kullanılır)
                     .setMinVideoSize(0, 480)
-                    // Ses: birden fazla dil varsa Türkçe, en çok kanallı (stereo/5.1) ve en yüksek kaliteli ses izi
+                    // Ses: birden fazla dil varsa Türkçe izi seç.
+                    // Ses kalitesi sınırı aşağıda internet hızına göre ayarlanır.
                     .setPreferredAudioLanguages("tr", "tur")
                     .setMaxAudioChannelCount(Int.MAX_VALUE)
                     .setMaxAudioBitrate(Int.MAX_VALUE)
             )
         }
+        audioTier = AUDIO_TIER_HIGH
+        lastAudioTierChange = 0L
         // İlk saniyelerde düşük kaliteden başlamasın diye TV'ye uygun bir başlangıç hızı tahmini
         val bandwidthMeter = DefaultBandwidthMeter.Builder(this)
             .setInitialBitrateEstimate(8_000_000L)
             .build()
+        // İnternet hızı her ölçüldüğünde ses kalitesini hıza göre ayarla
+        bandwidthMeter.addEventListener(main) { _, _, bitrateEstimate ->
+            adaptAudioToBandwidth(trackSelector, bitrateEstimate)
+        }
         // Daha uzun arabellek: kısa internet dalgalanmalarında görüntü/ses kesilmesin
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(20_000, 60_000, 2_500, 5_000)
@@ -362,6 +369,9 @@ class MainActivity : AppCompatActivity() {
         private const val RADIO_UA = "AlinsTV/${BuildConfig.VERSION_NAME} (Linux; Android TV) ExoPlayerLib/1.3.1"
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+        private const val AUDIO_TIER_LOW = 0
+        private const val AUDIO_TIER_MID = 1
+        private const val AUDIO_TIER_HIGH = 2
     }
 
     // ---- Radyo arka planı: şömine videosu ya da doğa manzarası ----
@@ -416,6 +426,42 @@ class MainActivity : AppCompatActivity() {
         set(v) = prefs.edit().putInt("quality2", v).apply()
 
     private var availableHeights: List<Int> = emptyList()
+
+    // ---- Ses kalitesi: internet hızına göre ----
+    // Yavaş internette yüksek bit hızlı / 5.1 ses izi görüntüden pay yer ve takılmaya yol açar.
+    // Hız düşünce sesi stereo ve daha düşük bit hızına indir, hız düzelince en iyi kaliteye geri çık.
+
+    private var audioTier = AUDIO_TIER_HIGH
+    private var lastAudioTierChange = 0L
+
+    private fun adaptAudioToBandwidth(selector: DefaultTrackSelector, bitrateEstimate: Long) {
+        if (bitrateEstimate <= 0) return
+        // Eşikler arasında gidip gelmesin: yukarı çıkmak için hızın eşiği %30 aşması gerekir
+        // < 1,5 Mbps: düşük · 1,5–4 Mbps: orta · > 4 Mbps: en iyi
+        val target = when {
+            bitrateEstimate < 1_500_000L -> AUDIO_TIER_LOW
+            audioTier == AUDIO_TIER_LOW && bitrateEstimate < 1_950_000L -> AUDIO_TIER_LOW
+            bitrateEstimate < 4_000_000L -> AUDIO_TIER_MID
+            audioTier != AUDIO_TIER_HIGH && bitrateEstimate < 5_200_000L -> AUDIO_TIER_MID
+            else -> AUDIO_TIER_HIGH
+        }
+        if (target == audioTier) return
+        val now = System.currentTimeMillis()
+        // Düşürme hemen olur; yükseltme en fazla 20 saniyede bir (ses izi sık sık değişmesin)
+        if (target > audioTier && now - lastAudioTierChange < 20_000L) return
+        audioTier = target
+        lastAudioTierChange = now
+        val (maxBitrate, maxChannels) = when (target) {
+            AUDIO_TIER_LOW -> 64_000 to 2
+            AUDIO_TIER_MID -> 128_000 to 2
+            else -> Int.MAX_VALUE to Int.MAX_VALUE
+        }
+        selector.setParameters(
+            selector.buildUponParameters()
+                .setMaxAudioBitrate(maxBitrate)
+                .setMaxAudioChannelCount(maxChannels)
+        )
+    }
 
     private fun screenHeight(): Int {
         val d = if (Build.VERSION.SDK_INT >= 30) display
