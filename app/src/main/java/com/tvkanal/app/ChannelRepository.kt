@@ -81,6 +81,7 @@ class ChannelRepository(private val context: Context) {
                 type = o.optString("type", "tv"),
                 fallbackUrl = o.optString("fallbackUrl"),
                 youtube = o.optString("youtube"),
+                stayOriginal = o.optBoolean("stayOriginal", false),
             )
         }
     }

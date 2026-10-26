@@ -213,8 +213,9 @@ class MainActivity : AppCompatActivity() {
             p.addListener(object : Player.Listener {
                 override fun onPlayerError(error: PlaybackException) {
                     val ch = channels.getOrNull(current)
-                    // Radyo: bağlantı koparsa vazgeçmeden yeniden bağlan
-                    if (ch != null && ch.isRadio && current >= 0) {
+                    // Radyo ve kendi yayınından vazgeçmeyen kanallar (ör. ATV):
+                    // bağlantı koparsa yedeğe/YouTube'a geçmeden yeniden bağlan
+                    if (ch != null && (ch.isRadio || ch.stayOriginal) && current >= 0) {
                         radioRetries++
                         if (radioRetries >= 3) showStatus("Bağlantı yenileniyor…")
                         val idx = current
@@ -246,7 +247,8 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onPlaybackStateChanged(state: Int) {
                     // Canlı radyo "bitmez": sunucu bağlantıyı kapattıysa hemen yeniden bağlan
-                    if (state == Player.STATE_ENDED && channels.getOrNull(current)?.isRadio == true) {
+                    val cur = channels.getOrNull(current)
+                    if (state == Player.STATE_ENDED && (cur?.isRadio == true || cur?.stayOriginal == true)) {
                         val idx = current
                         main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) }, 500)
                     }
@@ -288,7 +290,7 @@ class MainActivity : AppCompatActivity() {
         val ytSince = prefs.getLong("yt_${ch.id}", 0L)
         // Yalnızca resmi YouTube canlı yayını olan kanallar (ör. National Geographic) doğrudan oradan açılır
         val youtubeOnly = ch.url.isBlank() && ch.page.isBlank() && ch.youtube.isNotBlank()
-        if (youtubeOnly || (ch.youtube.isNotBlank() && System.currentTimeMillis() - ytSince < 6 * 3600_000L)) {
+        if (youtubeOnly || (!ch.stayOriginal && ch.youtube.isNotBlank() && System.currentTimeMillis() - ytSince < 6 * 3600_000L)) {
             usedYouTube = true
             player?.stop()
             watermark.visibility = View.GONE

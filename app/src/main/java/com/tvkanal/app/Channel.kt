@@ -16,6 +16,8 @@ data class Channel(
     val fallbackUrl: String = "",
     /** Son yedek: kanalın resmi YouTube canlı yayınının video kimliği. */
     val youtube: String = "",
+    /** true ise kanal kendi yayınından vazgeçmez: yedeğe/YouTube'a geçmeden yeniden bağlanır. */
+    val stayOriginal: Boolean = false,
 ) {
     val isRadio get() = type == "radio"
 }

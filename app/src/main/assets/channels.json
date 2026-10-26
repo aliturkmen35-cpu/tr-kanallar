@@ -14,7 +14,7 @@
       "name": "ATV",
       "category": "Ulusal",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv.m3u8",
-      "fallbackUrl": "https://trkvz-live.ercdn.net/atvavrupa/atvavrupa.m3u8",
+      "stayOriginal": true,
       "youtube": "tUjC5Z1X96Q",
       "youtubeChannel": "UCUVZ7T_kwkxDOGFcDlFI-hg",
       "iptv": "ATV.tr"

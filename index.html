@@ -153,6 +153,11 @@
   function tryUrls(c, urls, k, my) {
     if (my !== token) return;
     if (k >= urls.length) {
+      // Kendi yayınından vazgeçmeyen kanal (ör. ATV): YouTube'a geçme, yeniden bağlan
+      if (c.stayOriginal && urls.length) {
+        status("Bağlantı yenileniyor…");
+        return setTimeout(function () { if (my === token) tryUrls(c, urls, 0, my); }, 3000);
+      }
       if (c.youtube) return playYouTube(c);
       return status(c.name + " şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)");
     }
@@ -182,7 +187,7 @@
       video.onended = function () { if (my === token && c.type === "radio") setTimeout(function () { if (my === token) play(cur); }, 500); };
       video.ontimeupdate = function () { played = true; };
     }
-    video.onplaying = function () { if (my === token) show("spinner", false); };
+    video.onplaying = function () { if (my === token) { show("spinner", false); status(""); } };
     var p = video.play(); if (p && p.catch) p.catch(function () {});
   }
 
