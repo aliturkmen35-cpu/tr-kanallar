@@ -68,6 +68,8 @@
 <script>
 (function () {
   var LIST_URL = "channels.json";
+  // Yayın listesini yalnızca kendi sitesine veren kanallar (ör. Show TV) için aktarma sunucusu
+  var PROXY = "https://alins-tv-proxy.ali-turkmen35.workers.dev";
   var $ = function (id) { return document.getElementById(id); };
   var video = $("video"), yt = $("yt"), fire = $("fire");
   var channels = [], cur = -1, sel = 0, hls = null, token = 0, infoTimer = null, numBuf = "", numTimer = null;
@@ -144,7 +146,7 @@
     var urls = [];
     if (!c.webYoutube) {
       if (c.webUrl) urls.push(c.webUrl);
-      if (c.url) urls.push(c.url);
+      if (c.url) urls.push(c.webProxy && PROXY.indexOf("http") === 0 ? PROXY + "/?u=" + encodeURIComponent(c.url) : c.url);
       if (c.fallbackUrl) urls.push(c.fallbackUrl);
     }
     tryUrls(c, urls, 0, my);
