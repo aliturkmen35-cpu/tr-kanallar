@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-25 22:44 UTC · 53/56 kanal erişilebilir
+Son kontrol: 2026-10-26 00:59 UTC · 55/56 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -28,12 +28,12 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Çocuk | ✅ |  |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
-| TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT 2 | ✅ |  |
 | TRT Genç | ✅ |  |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
