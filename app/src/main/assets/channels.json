@@ -30,6 +30,7 @@
       "page": "https://www.showtv.com.tr/canli-yayin",
       "pattern": "https://ciner\\.daioncdn\\.net/showtv/[^\\\"'<>\\s]+",
       "iptv": "ShowTV.tr",
+      "stayOriginal": true,
       "youtube": "WxeHEn5N1vk",
       "youtubeChannel": "UC9JMe_We017gYrRc7kZHgmg",
       "webYoutube": true
