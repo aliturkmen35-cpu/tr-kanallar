@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-26 18:29 UTC · 60/62 kanal erişilebilir
+Son kontrol: 2026-10-26 18:49 UTC · 59/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -33,7 +33,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
-| TRT 2 | ✅ |  |
+| TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Genç | ✅ |  |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
