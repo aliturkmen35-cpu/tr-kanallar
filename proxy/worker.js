@@ -4,7 +4,13 @@
 // görüntü parçaları (.ts) doğrudan kanalın kendi sunucusundan yüklenir.
 
 const ALLOWED_HOSTS = [/(^|\.)daioncdn\.net$/];
-const REFERERS = { "daioncdn.net": "https://www.showtv.com.tr/" };
+// Sunucu adına göre kanalın kendi sitesi (en uzun eşleşme kazanır)
+const REFERERS = {
+  "ciner.daioncdn.net": "https://www.showtv.com.tr/",
+  "demiroren.daioncdn.net": "https://www.kanald.com.tr/",
+  "dogus.daioncdn.net": "https://www.ntv.com.tr/",
+  "daioncdn.net": "https://www.showtv.com.tr/",
+};
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +31,9 @@ export default {
       return new Response("forbidden", { status: 403, headers: CORS });
     }
 
-    const refKey = Object.keys(REFERERS).find((d) => target.hostname.endsWith(d));
+    const refKey = Object.keys(REFERERS)
+      .filter((d) => target.hostname === d || target.hostname.endsWith("." + d))
+      .sort((a, b) => b.length - a.length)[0];
     const referer = refKey ? REFERERS[refKey] : "";
     const up = await fetch(target.href, {
       headers: {
