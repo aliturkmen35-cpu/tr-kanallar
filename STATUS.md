@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-27 14:48 UTC · 59/62 kanal erişilebilir
+Son kontrol: 2026-10-27 19:49 UTC · 59/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
