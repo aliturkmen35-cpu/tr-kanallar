@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "updated": "2026-10-25 10:00 UTC",
   "channels": [
     {
@@ -15,7 +15,12 @@
       "category": "Ulusal",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv.m3u8",
       "stayOriginal": true,
-      "iptv": "ATV.tr"
+      "iptv": "ATV.tr",
+      "fallbackPage": "https://securevideotoken.tmgrup.com.tr/webtv/secure?url=https%3A%2F%2Ftrkvz.daioncdn.net%2Fatv%2Fatv.m3u8%3Fce%3D3%26app%3Dd1ce2d40-5256-4550-b02e-e73c185a314e",
+      "fallbackPattern": "\"Url\":\"(https://[^\"]+)\"",
+      "pageHeaders": {
+        "Referer": "https://www.atv.com.tr/"
+      }
     },
     {
       "id": "showtv",

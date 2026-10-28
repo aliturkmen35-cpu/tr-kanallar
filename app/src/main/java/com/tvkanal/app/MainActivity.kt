@@ -224,6 +224,9 @@ class MainActivity : AppCompatActivity() {
                     // bağlantı koparsa yedeğe/YouTube'a geçmeden yeniden bağlan
                     if (ch != null && (ch.isRadio || ch.stayOriginal) && current >= 0) {
                         radioRetries++
+                        // Aynı kanalın ikinci resmi kaynağı varsa (ör. ATV'nin kendi sitesindeki yayın)
+                        // kopan kaynaktan diğerine geç; ikisi arasında gidip gel
+                        if (!ch.isRadio && ch.hasFallback) useAlt = !useAlt
                         if (radioRetries >= 3) showStatus("Bağlantı yenileniyor…")
                         val idx = current
                         main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) },
@@ -234,11 +237,11 @@ class MainActivity : AppCompatActivity() {
                     if (!retried && current >= 0) {
                         retried = true
                         main.postDelayed({ play(current, keepRetryFlag = true) }, 1500)
-                    } else if (ch != null && ch.fallbackUrl.isNotBlank() && !usedFallback) {
+                    } else if (ch != null && ch.hasFallback && !usedFallback) {
                         // Ana yayın açılmadı: yedek yayını dene
                         usedFallback = true
-                        startStream(ch, ch.fallbackUrl,
-                            ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value ?: DEFAULT_UA)
+                        useAlt = true
+                        play(current, keepRetryFlag = true)
                     } else if (ch != null && ch.youtube.isNotBlank() && !usedYouTube) {
                         // Son yedek: kanalın resmi YouTube canlı yayını
                         usedYouTube = true
@@ -277,7 +280,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun play(index: Int, keepRetryFlag: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
-        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0 }
+        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0; useAlt = false }
         youTube.stop()
         watermark.visibility = View.VISIBLE
         if (!ch.isRadio) {
@@ -309,7 +312,14 @@ class MainActivity : AppCompatActivity() {
         val userAgent = ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value
             ?: if (ch.isRadio) RADIO_UA else DEFAULT_UA
 
-        if (ch.page.isBlank()) {
+        if (useAlt && ch.hasFallback) {
+            // Yedek kaynak: adresi (gerekirse kanalın token servisinden) o an oku
+            player?.stop()
+            io.execute {
+                val url = StreamResolver.resolveFallback(ch, DESKTOP_UA)
+                main.post { if (token == playToken && !isFinishing) startStream(ch, url, userAgent) }
+            }
+        } else if (ch.page.isBlank()) {
             startStream(ch, ch.url, userAgent)
         } else {
             // Adres süreli: kanalın sayfasından güncelini oku
@@ -326,6 +336,7 @@ class MainActivity : AppCompatActivity() {
 
     private var playToken = 0
     private var usedFallback = false
+    private var useAlt = false
     private var usedYouTube = false
     private var radioRetries = 0
     private lateinit var youTube: YouTubeLive

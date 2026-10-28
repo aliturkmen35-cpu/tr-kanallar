@@ -68,6 +68,10 @@ class ChannelRepository(private val context: Context) {
             o.optJSONObject("headers")?.let { h ->
                 h.keys().forEach { k -> headers[k] = h.getString(k) }
             }
+            val pageHeaders = mutableMapOf<String, String>()
+            o.optJSONObject("pageHeaders")?.let { h ->
+                h.keys().forEach { k -> pageHeaders[k] = h.getString(k) }
+            }
             Channel(
                 id = o.optString("id", "ch$i"),
                 name = o.getString("name"),
@@ -80,6 +84,9 @@ class ChannelRepository(private val context: Context) {
                 pattern = o.optString("pattern"),
                 type = o.optString("type", "tv"),
                 fallbackUrl = o.optString("fallbackUrl"),
+                fallbackPage = o.optString("fallbackPage"),
+                fallbackPattern = o.optString("fallbackPattern"),
+                pageHeaders = pageHeaders,
                 youtube = o.optString("youtube"),
                 stayOriginal = o.optBoolean("stayOriginal", false),
             )

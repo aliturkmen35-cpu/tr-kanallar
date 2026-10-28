@@ -14,10 +14,17 @@ data class Channel(
     val type: String = "tv",
     /** Ana yayın açılmazsa denenecek yedek yayın (ör. ATV için ATV Avrupa). */
     val fallbackUrl: String = "",
+    /** Yedek yayının adresi her açılışta bu adresten okunur (ör. kanalın resmi token servisi). */
+    val fallbackPage: String = "",
+    /** fallbackPage yanıtında yayın adresini bulan düzenli ifade. */
+    val fallbackPattern: String = "",
+    /** Sayfa/token isteğine eklenen başlıklar (ör. Referer). Yayın isteğine eklenmez. */
+    val pageHeaders: Map<String, String> = emptyMap(),
     /** Son yedek: kanalın resmi YouTube canlı yayınının video kimliği. */
     val youtube: String = "",
     /** true ise kanal kendi yayınından vazgeçmez: yedeğe/YouTube'a geçmeden yeniden bağlanır. */
     val stayOriginal: Boolean = false,
 ) {
     val isRadio get() = type == "radio"
+    val hasFallback get() = fallbackUrl.isNotBlank() || fallbackPage.isNotBlank()
 }
