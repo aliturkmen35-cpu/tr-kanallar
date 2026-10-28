@@ -91,8 +91,10 @@ class MainActivity : AppCompatActivity() {
         watermark = findViewById(R.id.watermark)
         youTube = YouTubeLive(findViewById(R.id.ytView)) {
             watermark.visibility = View.VISIBLE
+            // YouTube yedeği de gelmedi: 6 saatlik YouTube kısayolunu kaldır ki
+            // yeniden denemede önce kanalın kendi yayını denensin, sonra pes etmeden sürdür.
             channels.getOrNull(current)?.let { prefs.edit().remove("yt_${it.id}").apply() }
-            showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
+            scheduleReconnect()
         }
         bgVideo = findViewById(R.id.bgVideo)
         fireCredit = findViewById(R.id.fireCredit)
@@ -254,20 +256,29 @@ class MainActivity : AppCompatActivity() {
                         watermark.visibility = View.GONE // YouTube oynatıcısının üstüne logo koymuyoruz
                         youTube.play(ch.youtube)
                     } else {
-                        showStatus("${channels.getOrNull(current)?.name ?: "Kanal"} şu an açılamıyor\n(Kanal değiştirmek için ▲ ▼)")
+                        // Ana yayın, yedek ve YouTube de gelmedi: pes etme.
+                        // Kısa aralıklarla en iyi kaynaktan yeniden bağlanmayı sürdür;
+                        // internet düzelince kanal kendiliğinden geri gelir.
+                        scheduleReconnect()
                     }
                 }
 
                 override fun onPlaybackStateChanged(state: Int) {
-                    // Canlı radyo "bitmez": sunucu bağlantıyı kapattıysa hemen yeniden bağlan
+                    // Canlı yayın "bitmez": sunucu bağlantıyı kapattıysa yeniden bağlan
                     val cur = channels.getOrNull(current)
-                    if (state == Player.STATE_ENDED && (cur?.isRadio == true || cur?.stayOriginal == true)) {
+                    if (state == Player.STATE_ENDED && current >= 0) {
                         val idx = current
-                        main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) }, 500)
+                        if (cur?.isRadio == true || cur?.stayOriginal == true) {
+                            main.postDelayed({ if (current == idx) play(idx, keepRetryFlag = true) }, 500)
+                        } else {
+                            // Normal kanal: en iyi kaynaktan yeniden bağlanmayı sürdür
+                            scheduleReconnect()
+                        }
                     }
                     if (state == Player.STATE_READY) {
                         retried = false
                         radioRetries = 0
+                        reconnectRetries = 0
                         hideStatus()
                     }
                 }
@@ -281,9 +292,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun play(index: Int, keepRetryFlag: Boolean = false) {
+    private fun play(index: Int, keepRetryFlag: Boolean = false, fromReconnect: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
         if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0; useAlt = false }
+        // Kullanıcı kanalı kendi değiştirdiyse yeniden-bağlanma sayacını sıfırla
+        // (otomatik yeniden bağlanmada sayaç korunur ki aralık giderek açılsın).
+        if (!keepRetryFlag && !fromReconnect) reconnectRetries = 0
         youTube.stop()
         watermark.visibility = View.VISIBLE
         if (!ch.isRadio) {
@@ -337,9 +351,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Kanal kopup tüm kaynaklar (ana yayın, yedek, YouTube) gelmediğinde pes etmez;
+     * giderek açılan aralıklarla (3sn, 6sn, … en çok 20sn) en iyi kaynaktan yeniden
+     * bağlanmayı sürdürür. İnternet düzelince kanal kendiliğinden geri gelir.
+     */
+    private fun scheduleReconnect() {
+        if (current < 0) return
+        reconnectRetries++
+        val name = channels.getOrNull(current)?.name ?: "Kanal"
+        showStatus(
+            if (reconnectRetries >= 4)
+                "$name şu an açılamıyor, yeniden deneniyor…\n(Kanal değiştirmek için ▲ ▼)"
+            else "Bağlantı yenileniyor…"
+        )
+        val idx = current
+        main.postDelayed(
+            { if (current == idx && !isFinishing) play(idx, fromReconnect = true) },
+            (3_000L * reconnectRetries).coerceAtMost(20_000L)
+        )
+    }
+
     private var playToken = 0
     private var usedFallback = false
     private var useAlt = false
+    private var reconnectRetries = 0
     private var usedYouTube = false
     private var radioRetries = 0
     private lateinit var youTube: YouTubeLive
