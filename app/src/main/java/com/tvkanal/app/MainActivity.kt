@@ -176,9 +176,8 @@ class MainActivity : AppCompatActivity() {
                 buildUponParameters()
                     .setViewportSizeToPhysicalDisplaySize(this@MainActivity, true)
                     .setForceHighestSupportedBitrate(false)
-                    // İnternet yavaşlasa da 480p'nin altına düşme
-                    // (yayında 480p ve üstü yoksa en yakın kalite kullanılır)
-                    .setMinVideoSize(0, 480)
+                    // İnternet zayıfsa kaliteyi düşürmesine izin ver: donup beklemektense
+                    // 360p'ye (hatta daha aşağı) in, akıcı oynasın. İnternet açılınca kendi yükselir.
                     // Ses: birden fazla dil varsa Türkçe izi seç.
                     // Ses kalitesi sınırı aşağıda internet hızına göre ayarlanır.
                     .setPreferredAudioLanguages("tr", "tur")
@@ -189,16 +188,20 @@ class MainActivity : AppCompatActivity() {
         audioTier = AUDIO_TIER_HIGH
         lastAudioTierChange = 0L
         // İlk saniyelerde düşük kaliteden başlamasın diye TV'ye uygun bir başlangıç hızı tahmini
+        // Açılışta interneti abartmayıp orta bir hızdan başla: zayıf Wi-Fi'de
+        // ilk saniyelerde yüksek kaliteye zıplayıp donmasın.
         val bandwidthMeter = DefaultBandwidthMeter.Builder(this)
-            .setInitialBitrateEstimate(8_000_000L)
+            .setInitialBitrateEstimate(3_000_000L)
             .build()
         // İnternet hızı her ölçüldüğünde ses kalitesini hıza göre ayarla
         bandwidthMeter.addEventListener(main) { _, _, bitrateEstimate ->
             adaptAudioToBandwidth(trackSelector, bitrateEstimate)
         }
         // Daha uzun arabellek: kısa internet dalgalanmalarında görüntü/ses kesilmesin
+        // Oynatmaya başlamadan önce ve donma sonrası biraz daha fazla görüntü biriktir:
+        // kısa internet dalgalanmaları tamponu boşaltıp görüntüyü dondurmasın.
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(20_000, 60_000, 2_500, 5_000)
+            .setBufferDurationsMs(30_000, 60_000, 5_000, 10_000)
             .build()
         // TV'nin bir görüntü çözücüsü yayını açamazsa diğer çözücüyü dene (eski/ucuz TV'ler için)
         val renderers = DefaultRenderersFactory(this).setEnableDecoderFallback(true)
