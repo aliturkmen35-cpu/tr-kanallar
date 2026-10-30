@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-30 06:11 UTC · 59/62 kanal erişilebilir
+Son kontrol: 2026-10-30 13:18 UTC · 57/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -19,7 +19,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | National Geographic | ✅ | resmi YouTube canlı yayını |
 | Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ✅ |  |
+| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
@@ -28,13 +28,13 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Çocuk | ✅ |  |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
-| TRT 2 | ✅ |  |
-| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Genç | ✅ |  |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
@@ -55,7 +55,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Radyo 7 | ✅ |  |
 | Süper FM | ✅ |  |
 | Metro FM | ✅ |  |
-| Slow Türk | ✅ |  |
+| Slow Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Radyo Fenomen | ✅ |  |
 | Alem FM | ✅ |  |
 | TRT FM | ✅ |  |
@@ -64,7 +64,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Pal Nostalji | ✅ |  |
 | Radyo 45'lik | ✅ |  |
 | TRT Diyanet Çocuk | ✅ |  |
-| TRT EBA | ✅ |  |
+| TRT EBA | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TBMM TV | ✅ |  |
 | TV 4 | ✅ |  |
 | A Spor | ✅ |  |
