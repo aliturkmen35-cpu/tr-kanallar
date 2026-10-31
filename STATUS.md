@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-10-31 01:59 UTC · 60/62 kanal erişilebilir
+Son kontrol: 2026-10-31 08:13 UTC · 58/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -34,7 +34,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Genç | ✅ |  |
+| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
@@ -64,7 +64,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Pal Nostalji | ✅ |  |
 | Radyo 45'lik | ✅ |  |
 | TRT Diyanet Çocuk | ✅ |  |
-| TRT EBA | ✅ |  |
+| TRT EBA | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TBMM TV | ✅ |  |
 | TV 4 | ✅ |  |
 | A Spor | ✅ |  |
