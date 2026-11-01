@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-01 08:40 UTC · 57/62 kanal erişilebilir
+Son kontrol: 2026-11-01 15:44 UTC · 58/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -19,7 +19,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | National Geographic | ✅ | resmi YouTube canlı yayını |
 | Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Haber | ✅ |  |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
@@ -28,11 +28,11 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ✅ |  |
+| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
-| TRT Kurdî | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Kurdî | ✅ |  |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | A2 | ✅ |  |
