@@ -1,13 +1,13 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-04 04:41 UTC · 55/62 kanal erişilebilir
+Son kontrol: 2026-11-04 12:46 UTC · 53/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
 
 | Kanal | Durum | Not |
 |---|---|---|
-| TRT 1 | ✅ |  |
+| TRT 1 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | ATV | ✅ |  |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
@@ -19,7 +19,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | National Geographic | ✅ | resmi YouTube canlı yayını |
 | Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ✅ |  |
+| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
@@ -27,14 +27,14 @@ bir kanal Türkiye'den açılıyor olabilir.
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
-| TRT Arabi | ✅ |  |
+| TRT Arabi | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
-| TRT Kurdî | ✅ |  |
+| TRT Kurdî | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Genç | ✅ |  |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
