@@ -130,7 +130,7 @@ def main():
             logos[lg["channel"]] = lg["url"]
 
     # Kanalı tanımsız akışların ülkesi: iptv-org/iptv'deki dosya adından (tr.m3u, tr_gem.m3u -> TR)
-    url_country = {}
+    url_country, repo_entries = {}, []
     files = [f["name"] for f in json.loads(fetch(IPTV_STREAMS)) if f["name"].endswith(".m3u")]
 
     def load_file(name):
@@ -142,8 +142,9 @@ def main():
     with ThreadPoolExecutor(16) as ex:
         for name, entries in ex.map(load_file, files):
             cc = re.split(r"[_.]", name)[0].upper()
-            for _, _, url, _ in entries:
+            for attrs, title, url, h in entries:
                 url_country.setdefault(url, cc)
+                repo_entries.append((cc, attrs, title, url, h))
 
     ours = json.loads((ROOT / "channels.json").read_text(encoding="utf-8"))
     have = {c.get("iptv", "").split("@")[0] for c in ours["channels"]}
@@ -188,14 +189,14 @@ def main():
         seen.add(url)
 
         key = (cid, s["feed"] or "")
-        if key in out:  # aynı kanalın ikinci akışı yedek olur
-            out[key].setdefault("fallbackUrl", url)
+        if key in out:  # aynı kanalın diğer akışları: sonda yaşayan ilk ikisi ana adres + yedek olur
+            out[key]["_alts"].append((url, headers_of(s.get("user_agent"), s.get("referrer"))))
             continue
         name = ch["name"]
         feed = feeds.get((cid, s["feed"])) if s["feed"] else None
         if feed and not feed["is_main"]:
             name += f" ({feed['name']})"
-        item = {"id": f"w:{cid}@{s['feed'] or ''}", "name": name, "country": ch["country"], "url": url}
+        item = {"id": f"w:{cid}@{s['feed'] or ''}", "name": name, "country": ch["country"], "url": url, "_alts": []}
         if h := headers_of(s.get("user_agent"), s.get("referrer")):
             item["headers"] = h
         if ch["categories"]:
@@ -204,9 +205,38 @@ def main():
             item["logo"] = logos[cid]
         out[key] = item
 
+    # iptv-org/iptv deposunda olup API'ye (henüz) düşmemiş ya da API'de eşleşmeyen kanallar
+    repo_new = 0
+    known_names = {(c["country"], c["name"].lower()) for c in out.values()}
+    have_cid = {c["id"][2:].split("@")[0] for c in out.values() if "@" in c["id"]}
+    for cc, attrs, title, url, h in repo_entries:
+        title = clean_title(title)
+        cid = (attrs.get("tvg-id") or "").split("@")[0]
+        ch = channels.get(cid)
+        if url in seen or not title or bad(title, url) or cid in have or cid in have_cid:
+            continue
+        if ch and (cid in blocked or ch["is_nsfw"] or ch["closed"]):
+            continue
+        if "--tr" in sys.argv and cc != "TR":
+            continue
+        if (cc, title.lower()) in known_names:
+            continue
+        seen.add(url)
+        known_names.add((cc, title.lower()))
+        if cid:
+            have_cid.add(cid)
+        item = {"id": "w:r:" + (cid or url[-60:]), "name": title, "country": cc, "url": url}
+        if h:
+            item["headers"] = h
+        if ch and ch["categories"]:
+            item["genre"] = ch["categories"][0]
+        if cid in logos:
+            item["logo"] = logos[cid]
+        out[("r", url)] = item
+        repo_new += 1
+
     # Free-TV: iptv-org'da olmayan ücretsiz kanallar
     freetv = 0
-    known_names = {(c["country"], c["name"].lower()) for c in out.values()}
     for attrs, title, url, h in parse_m3u(fetch(FREETV)):
         title = clean_title(title)
         cc = (attrs.get("tvg-country") or "").upper()[:2]
@@ -268,23 +298,41 @@ def main():
     print(f"Türkiye listesi: {local} yeni kanal, {extra_fb} dünya + {curated_fb} Alin's kanalına yedek adres",
           file=sys.stderr)
 
+    check = "--check" in sys.argv
+
+    def settle(c):
+        """Kanalın tüm akışlarından alan adı var olan ilk ikisini ana adres + yedek yapar."""
+        alts = [(c["url"], c.get("headers") or {})]
+        if c.get("fallbackUrl"):
+            alts.append((c["fallbackUrl"], {}))
+        alts += c.pop("_alts", [])
+        live = [a for a in alts if host_exists(a[0])] if check else alts
+        if not live:
+            return False
+        c["url"], h = live[0]
+        c.pop("headers", None)
+        if h:
+            c["headers"] = h
+        c.pop("fallbackUrl", None)
+        if len(live) > 1:
+            c["fallbackUrl"] = live[1][0]
+        return True
+
     cands = list(out.values())
-    if "--check" in sys.argv:
-        with ThreadPoolExecutor(64) as ex:
-            ok = list(ex.map(lambda c: host_exists(c["url"]) or host_exists(c.get("fallbackUrl") or c["url"]), cands))
+    with ThreadPoolExecutor(64) as ex:
+        ok = list(ex.map(settle, cands))
+    if check:
         skipped["alan adı yok"] = ok.count(False)
-    else:
-        ok = [True] * len(cands)
     items = sorted((c for c, k in zip(cands, ok) if k), key=lambda c: (c["country"], c["name"].lower()))
     data = {
-        "source": "iptv-org/api + iptv-org/iptv + Free-TV/IPTV",
+        "source": "iptv-org/api + iptv-org/iptv (streams) + Free-TV/IPTV",
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "channels": items,
     }
     (ROOT / "world.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     tr = sum(1 for c in items if c["country"] == "TR")
     countries = len({c["country"] for c in items})
-    print(f"world.json: {len(items)} kanal ({tr} Türkiye), {countries} ülke, Free-TV'den {freetv}. Atlanan: {skipped}",
+    print(f"world.json: {len(items)} kanal ({tr} Türkiye), {countries} ülke, Free-TV'den {freetv}, iptv-org deposundan ek {repo_new}. Atlanan: {skipped}",
           file=sys.stderr)
 
 
