@@ -11,6 +11,9 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.EditText
+import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -58,21 +61,33 @@ class MainActivity : AppCompatActivity() {
     private val prefs by lazy { getSharedPreferences("tv", Context.MODE_PRIVATE) }
 
     private var channels: List<Channel> = emptyList()
-    private var categories: List<String> = emptyList()
+    private var baseCurated: List<Channel> = emptyList() // Alin's listesi (sunucudan)
+    private var baseWorld: List<Channel> = emptyList()   // dünya kanalları (world.json)
+    private val edits by lazy { UserEdits(prefs) }
+
+    /** Soldaki sütunun bir satırı. key: "search", "fav", "add", "hidden" ya da "g:<grup>". */
+    private data class Cat(val key: String, val title: String)
+    private var categories: List<Cat> = emptyList()
     private var shownChannels: List<Int> = emptyList() // seçili kategorideki kanalların indeksleri
+    private var shownKey = ""                          // ekrandaki kategorinin anahtarı
+    private var searchQuery = ""
+    private var playContext: List<Int> = emptyList()   // ▲ ▼ ile gezilen liste (kanalın açıldığı kategori)
     private var current = -1
     private var retried = false
     private var lastBackPress = 0L
 
     // Odak değişimi liste kayarken gelebilir; o sırada listeyi güncellemek çöker, bir sonraki ana ertele
-    private val categoryAdapter = RowAdapter(onClick = { focusChannels() }, onFocus = { onCategoryFocus(it) })
+    private val categoryAdapter = RowAdapter(onClick = { onCategoryClick(it) }, onFocus = { onCategoryFocus(it) })
 
     private fun onCategoryFocus(pos: Int) {
         main.post { if (categoryAdapter.selected != pos) showCategory(pos) }
     }
-    private val channelAdapter = RowAdapter(onClick = { pos ->
-        shownChannels.getOrNull(pos)?.let { play(it); hideList() }
-    })
+    private val channelAdapter = RowAdapter(
+        onClick = { pos ->
+            shownChannels.getOrNull(pos)?.let { playContext = shownChannels; play(it); hideList() }
+        },
+        onLongClick = { pos -> shownChannels.getOrNull(pos)?.let { showChannelOptions(it) } },
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         TrustFix.install(this) // eski Android TV'lerde yeni sertifikalar
@@ -151,15 +166,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setChannels(list: List<Channel>) {
-        channels = list
-        rebuildCategories()
-        showCategory(0)
-        if (list.isEmpty()) {
+        baseCurated = list
+        rebuild()
+        if (channels.isEmpty()) {
             showStatus("Listede kanal yok")
             return
         }
         val lastId = prefs.getString("last", null)
-        val start = list.indexOfFirst { it.id == lastId }.takeIf { it >= 0 } ?: 0
+        val start = channels.indexOfFirst { it.id == lastId }.takeIf { it >= 0 } ?: 0
         play(start)
         loadWorld(lastId)
     }
@@ -171,9 +185,8 @@ class MainActivity : AppCompatActivity() {
             if (world.isEmpty()) return@execute
             main.post {
                 if (isFinishing || isDestroyed) return@post
-                channels = channels.filter { it.group == "Alin's" } + world
-                rebuildCategories()
-                showCategory(categories.indexOf(channels.getOrNull(current)?.group).coerceAtLeast(0))
+                baseWorld = world
+                rebuild()
                 // Son izlenen bir dünya kanalıysa ona geç
                 if (lastId != null && channels.getOrNull(current)?.id != lastId) {
                     val idx = channels.indexOfFirst { it.id == lastId }
@@ -183,18 +196,194 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Kanal listesini yeniden kurar: Alin's + dünya + izleyicinin eklediği kanallar,
+     * izleyicinin verdiği adlarla. Oynayan kanal kimliğiyle korunur.
+     */
+    private fun rebuild() {
+        val curId = channels.getOrNull(current)?.id
+        val ctxIds = playContext.mapNotNull { channels.getOrNull(it)?.id }
+        channels = (baseCurated + baseWorld + edits.custom).map { c ->
+            edits.names[c.id]?.let { c.copy(name = it) } ?: c
+        }
+        val index = HashMap<String, Int>(channels.size * 2)
+        channels.forEachIndexed { i, c -> index.putIfAbsent(c.id, i) }
+        if (curId != null) current = index[curId] ?: -1
+        playContext = ctxIds.mapNotNull { index[it] }
+        rebuildCategories()
+        val keep = categories.indexOfFirst { it.key == shownKey }
+        showCategory(if (keep >= 0) keep else categoryOf(current))
+    }
+
+    private fun idIndex(): Map<String, Int> {
+        val m = HashMap<String, Int>(channels.size * 2)
+        channels.forEachIndexed { i, c -> m.putIfAbsent(c.id, i) }
+        return m
+    }
+
     private fun rebuildCategories() {
-        categories = channels.map { it.group }.distinct()
-        val counts = channels.groupingBy { it.group }.eachCount()
-        categoryAdapter.submit(categories.map { RowAdapter.Row("", "$it (${counts[it]})") })
+        val visible = channels.filter { it.id !in edits.hidden }
+        val counts = visible.groupingBy { it.group }.eachCount()
+        val groups = visible.map { it.group }.distinct()
+        categories = buildList {
+            add(Cat("search", if (searchQuery.isBlank()) "🔍 Kanal ara" else "🔍 Ara: $searchQuery"))
+            add(Cat("fav", "♥ Favoriler (${edits.favorites.size})"))
+            groups.forEach { add(Cat("g:$it", "$it (${counts[it]})")) }
+            add(Cat("add", "✚ Kanal ekle"))
+            if (edits.hidden.isNotEmpty()) add(Cat("hidden", "Gizlenenler (${edits.hidden.size})"))
+        }
+        categoryAdapter.submit(categories.map { RowAdapter.Row("", it.title) })
+    }
+
+    /** Kanalın kendi grubunun sütundaki sırası. */
+    private fun categoryOf(index: Int): Int {
+        val g = channels.getOrNull(index)?.group ?: return 0
+        return categories.indexOfFirst { it.key == "g:$g" }.coerceAtLeast(0)
+    }
+
+    private fun channelsFor(key: String): List<Int> = when {
+        key == "fav" -> idIndex().let { m -> edits.favorites.mapNotNull { m[it] } }
+        key == "hidden" -> channels.indices.filter { channels[it].id in edits.hidden }
+        key == "search" -> if (searchQuery.isBlank()) emptyList() else {
+            val q = UserEdits.fold(searchQuery)
+            channels.indices.filter { channels[it].id !in edits.hidden && q in UserEdits.fold(channels[it].name) }
+        }
+        key.startsWith("g:") -> key.removePrefix("g:").let { g ->
+            channels.indices.filter { channels[it].group == g && channels[it].id !in edits.hidden }
+        }
+        else -> emptyList()
     }
 
     private fun showCategory(pos: Int) {
         val cat = categories.getOrNull(pos) ?: return
         categoryAdapter.selected = pos
-        shownChannels = channels.indices.filter { channels[it].group == cat }
-        channelAdapter.submit(shownChannels.map { RowAdapter.Row("${it + 1}", channels[it].name) })
+        shownKey = cat.key
+        shownChannels = channelsFor(cat.key)
+        val favs = edits.favorites.toHashSet()
+        channelAdapter.submit(shownChannels.map {
+            val c = channels[it]
+            RowAdapter.Row("${it + 1}", if (cat.key != "fav" && c.id in favs) "♥ ${c.name}" else c.name)
+        })
         channelAdapter.selected = shownChannels.indexOf(current)
+    }
+
+    private fun onCategoryClick(pos: Int) {
+        when (categories.getOrNull(pos)?.key) {
+            "search" -> askSearch()
+            "add" -> askAddChannel()
+            else -> focusChannels()
+        }
+    }
+
+    // ---- Arama, favoriler, kanal düzenleme ----
+
+    private fun askSearch() {
+        val input = EditText(this).apply {
+            setText(searchQuery); setSelection(text.length)
+            hint = "Kanal adı (ör. trt, haber, kanal 7)"
+            setSingleLine()
+        }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Kanal ara")
+            .setView(padded(input))
+            .setPositiveButton("Ara") { _, _ ->
+                searchQuery = input.text.toString().trim()
+                rebuildCategories()
+                showCategory(0)
+                if (shownChannels.isEmpty()) Toast.makeText(this, "Sonuç yok", Toast.LENGTH_SHORT).show()
+                else focusChannels()
+            }
+            .setNeutralButton("Temizle") { _, _ -> searchQuery = ""; rebuildCategories(); showCategory(0) }
+            .setNegativeButton("Vazgeç", null)
+            .show()
+        // Ekran klavyesindeki ✓ / Ara tuşu doğrudan arar
+        input.imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
+        input.setOnEditorActionListener { _, _, _ ->
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick(); true
+        }
+        input.requestFocus()
+    }
+
+    private fun askAddChannel() {
+        val name = EditText(this).apply { hint = "Kanal adı"; setSingleLine() }
+        val url = EditText(this).apply { hint = "Yayın adresi (http://… .m3u8)"; setSingleLine() }
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(name); addView(url)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Kanal ekle")
+            .setView(padded(box))
+            .setPositiveButton("Ekle") { _, _ ->
+                val u = url.text.toString().trim()
+                if (!u.startsWith("http")) {
+                    Toast.makeText(this, "Adres http ile başlamalı", Toast.LENGTH_LONG).show()
+                    return@setPositiveButton
+                }
+                edits.addCustom(name.text.toString().ifBlank { "Kanal" }, u)
+                shownKey = "g:${UserEdits.GROUP_CUSTOM}"
+                rebuild()
+                focusChannels()
+            }
+            .setNegativeButton("Vazgeç", null)
+            .show()
+    }
+
+    /** Kanal satırında OK'a uzun basınca açılan seçenekler. */
+    private fun showChannelOptions(index: Int) {
+        val ch = channels.getOrNull(index) ?: return
+        val inFav = shownKey == "fav"
+        val opts = mutableListOf<Pair<String, () -> Unit>>()
+        opts += (if (edits.isFavorite(ch.id)) "♥ Favorilerden çıkar" else "♥ Favorilere ekle") to {
+            edits.toggleFavorite(ch.id); refreshList()
+        }
+        if (inFav) {
+            opts += "▲ Yukarı taşı" to { edits.moveFavorite(ch.id, -1); refreshList(ch.id) }
+            opts += "▼ Aşağı taşı" to { edits.moveFavorite(ch.id, +1); refreshList(ch.id) }
+        }
+        opts += "✎ Adını değiştir" to { askRename(ch) }
+        opts += (if (ch.id in edits.hidden) "Göster" else "Gizle") to { edits.toggleHidden(ch.id); refreshList() }
+        if (ch.group == UserEdits.GROUP_CUSTOM) opts += "✖ Kanalı sil" to { edits.removeCustom(ch.id); rebuild() }
+        AlertDialog.Builder(this)
+            .setTitle(ch.name)
+            .setItems(opts.map { it.first }.toTypedArray()) { _, which -> opts[which].second() }
+            .show()
+    }
+
+    private fun askRename(ch: Channel) {
+        val input = EditText(this).apply { setText(ch.name); setSelection(text.length); setSingleLine() }
+        AlertDialog.Builder(this)
+            .setTitle("Kanalın adı")
+            .setView(padded(input))
+            .setPositiveButton("Kaydet") { _, _ -> edits.rename(ch.id, input.text.toString()); rebuild() }
+            .setNeutralButton("Eski adı") { _, _ -> edits.rename(ch.id, null); rebuild() }
+            .setNegativeButton("Vazgeç", null)
+            .show()
+    }
+
+    /** Listeyi yeniler; odak verilen kanalda (yoksa aynı satırda) kalır. */
+    private fun refreshList(focusId: String? = null) {
+        val row = channelAdapter.selected
+        rebuildCategories()
+        val keep = categories.indexOfFirst { it.key == shownKey }
+        showCategory(if (keep >= 0) keep else 0)
+        val pos = focusId?.let { id -> shownChannels.indexOfFirst { channels[it].id == id } } ?: -1
+        focusRow(if (pos >= 0) pos else focusedChannelRow().coerceAtMost(shownChannels.size - 1).takeIf { it >= 0 } ?: row)
+    }
+
+    private fun focusedChannelRow(): Int =
+        channelList.focusedChild?.let { channelList.getChildAdapterPosition(it) } ?: channelAdapter.selected
+
+    private fun focusRow(pos: Int) {
+        if (pos < 0) return
+        channelList.scrollToPosition(pos)
+        channelList.post { channelList.findViewHolderForAdapterPosition(pos)?.itemView?.requestFocus() }
+    }
+
+    private fun padded(v: View) = android.widget.FrameLayout(this).apply {
+        val p = (20 * resources.displayMetrics.density).toInt()
+        setPadding(p, p / 2, p, 0)
+        addView(v)
     }
 
     // ---- Oynatma ----
@@ -619,9 +808,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun step(delta: Int) {
         if (channels.isEmpty()) return
-        // ▲ ▼ yalnızca o anki grubun (Alin's ya da bir ülke) içinde gezinir
-        val group = channels.getOrNull(current)?.group ?: channels[0].group
-        val inGroup = channels.indices.filter { channels[it].group == group }
+        // ▲ ▼ kanalın açıldığı listede (favoriler, arama ya da ülke) gezinir
+        val inGroup = playContext.takeIf { current in it }
+            ?: channelsFor("g:" + (channels.getOrNull(current)?.group ?: channels[0].group)).ifEmpty { listOf(current.coerceAtLeast(0)) }
         val pos = inGroup.indexOf(current).coerceAtLeast(0)
         play(inGroup[(pos + delta + inGroup.size) % inGroup.size])
     }
@@ -650,8 +839,13 @@ class MainActivity : AppCompatActivity() {
     private fun showList() {
         if (channels.isEmpty()) return
         listPanel.visibility = View.VISIBLE
-        // Oynayan kanalın grubu (Alin's ya da ülke) seçili gelsin, odak oynayan kanalda olsun
-        val cat = categories.indexOf(channels.getOrNull(current)?.group).coerceAtLeast(0)
+        // Kanalın açıldığı liste (favoriler/arama/ülke) seçili gelsin, odak oynayan kanalda olsun
+        val ctx = categories.indexOfFirst { it.key == shownKey }
+        val cat = if (ctx >= 0 && current in channelsFor(shownKey)) ctx else categoryOf(current)
+        if (prefs.getInt("hintShown", 0) < 3) {
+            prefs.edit().putInt("hintShown", prefs.getInt("hintShown", 0) + 1).apply()
+            Toast.makeText(this, "Arama ve favoriler: sola iki kez basın\nFavori ekleme, ad değiştirme, gizleme: kanalda OK'a basılı tutun", Toast.LENGTH_LONG).show()
+        }
         showCategory(cat)
         categoryList.scrollToPosition(cat)
         focusChannels()
@@ -673,9 +867,19 @@ class MainActivity : AppCompatActivity() {
     private val listVisible get() = listPanel.visibility == View.VISIBLE
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_SEARCH && channels.isNotEmpty()) {
+            if (!listVisible) showList()
+            askSearch(); return true
+        }
         if (listVisible || qualityVisible) {
             if (keyCode == KeyEvent.KEYCODE_BACK) {
                 hideList(); hideQuality(); return true
+            }
+            // Ülke sütunundayken sol tuş: en üste (Kanal ara / Favoriler) atla
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && listVisible && categoryList.hasFocus()) {
+                categoryList.scrollToPosition(0)
+                categoryList.post { categoryList.findViewHolderForAdapterPosition(0)?.itemView?.requestFocus() }
+                return true
             }
             return super.onKeyDown(keyCode, event)
         }

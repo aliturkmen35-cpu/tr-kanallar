@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 class RowAdapter(
     private val onClick: (Int) -> Unit,
     private val onFocus: (Int) -> Unit = {},
+    private val onLongClick: ((Int) -> Unit)? = null,
 ) : RecyclerView.Adapter<RowAdapter.Holder>() {
 
     data class Row(val number: String, val title: String)
@@ -45,6 +46,9 @@ class RowAdapter(
         holder.name.text = row.title
         holder.itemView.isSelected = position == selected
         holder.itemView.setOnClickListener { onClick(holder.bindingAdapterPosition) }
+        if (onLongClick != null) holder.itemView.setOnLongClickListener {
+            onLongClick.invoke(holder.bindingAdapterPosition); true
+        }
         holder.itemView.setOnFocusChangeListener { _, has ->
             if (has) onFocus(holder.bindingAdapterPosition)
         }

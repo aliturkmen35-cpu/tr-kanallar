@@ -1,27 +1,34 @@
-"""iptv-org/api'deki kanalları world.json'a aktarır (--tr: yalnızca Türkiye + Türkçe yayınlar).
+"""Dünya kanallarını world.json'a aktarır.
 
-Kaynak: https://github.com/iptv-org/api (Unlicense). Akışlar iptv-org'un
-topladığı herkese açık yayınlardır.
+Kaynaklar:
+  - iptv-org/api (https://github.com/iptv-org/api, Unlicense): kanal bilgileri ve akışlar
+  - iptv-org/iptv streams/*.m3u: kanalı tanımsız akışların hangi ülkeye ait olduğu
+  - Free-TV/IPTV (https://github.com/Free-TV/IPTV): elle seçilmiş ücretsiz/yasal kanallar
 
 Dışarıda bırakılanlar:
-  - iptv-org'un kendi engel listesi (telif şikâyeti / DMCA ve +18)
-  - +18 işaretli, kapanmış ya da "xxx" kategorili kanallar
-  (kanalı belirsiz akışlar başlığa göre aynı süzgeçten geçip "Diğer"e girer)
-  - paralı spor/film platformları (beIN, S Sport, Sky, DAZN, HBO...): bunlar
-    ücretsiz dağıtılmaz, listede görünüyorlarsa izinsiz yayındır
+  - iptv-org'un engel listesi (DMCA ve +18), +18 ya da kapanmış kanallar
+  - paralı spor/film/eğlence kanallarının izinsiz kopyaları (beIN, Disney, HBO...)
   - bilinen korsan sunucular
   - zaten channels.json'da (Alin's listesinde) olan kanallar
+  - --check ile: alan adı dünyada hiç var olmayan (DNS kaydı yok) akışlar.
+    Bölgeye göre eleme YOK: hangi ülkeden çalıştırılırsa çalıştırılsın sonuç aynıdır.
 
-Kullanım:  python tools/import_iptv_org.py [--check] [--tr]   (repo kökünde world.json yazar)
+Kullanım:  python tools/import_iptv_org.py [--check] [--tr]
 """
 import json
 import re
+import socket
 import sys
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 API = "https://iptv-org.github.io/api/"
+IPTV_STREAMS = "https://api.github.com/repos/iptv-org/iptv/contents/streams"
+IPTV_RAW = "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/"
+FREETV = "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8"
 ROOT = Path(__file__).resolve().parent.parent
 
 PAID = re.compile(
@@ -31,7 +38,7 @@ PAID = re.compile(
     r"sport ?tv ?\d|nba ?tv|nfl ?network|ufc|wwe|ppv|eleven ?sports?|viaplay|ziggo ?sport|"
     r"astro ?(supersport|arena)|star ?sports?|sony ?(ten|six|sports)|willow|ssc ?sport|ad ?sports?|"
     r"alkass|osn|shahid|movistar ?(deportes|laliga|liga)|m\+|max ?sport|polsat ?sport|"
-    r"nova ?sport|match ?(tv|premier|futbol)|setanta|optus ?sport|kayo|stan ?sport|"
+    r"nova ?sport|match ?(tv|premier|futbol)|optus ?sport|kayo|stan ?sport|"
     # Paralı eğlence/çocuk/belgesel kanalları: ücretsiz resmi yayınları yok,
     # listede çıkanlar başka sağlayıcıların paketlerinden kopyalanmış
     r"disney|nick(elodeon|toons| ?jr\.?|/| schweiz)?|teennick|cartoon ?network|boomerang|cartoonito|"
@@ -43,54 +50,75 @@ PAID = re.compile(
     r"colors ?(tv|cineplex|bangla|marathi|kannada|tamil|gujarati|rishtey|infinity)?)\b",
     re.I,
 )
+ADULT = re.compile(r"xxx|adult|porn|\+18|18\+|erotic|hustler|playboy|brazzers", re.I)
 BAD_HOSTS = ("mangeinde", "siteyaptim", "tv.vin", "streameast", "crichd", "hesgoal", "totalsportek",
              ".cfd/", "workers.dev", "stmify", "mangora")
 
 
+def fetch(url, timeout=60):
+    req = urllib.request.Request(url, headers={"User-Agent": "alins-tv-importer"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read().decode("utf-8", "replace")
+
+
 def get(name):
-    with urllib.request.urlopen(API + name + ".json", timeout=60) as r:
-        return json.load(r)
+    return json.loads(fetch(API + name + ".json"))
 
 
-def works(c):
-    """Akış tamamen ölü mü? Bölgeye göre eleme YOK: coğrafi engel (401/403/451),
-    yoğunluk (429/5xx) ya da zaman aşımı "çalışıyor" sayılır; çünkü başka bir
-    ülkeden açılıyor olabilir. Yalnızca adresi olmayan (DNS), bağlantıyı reddeden
-    ya da 404/410 veren akışlar elenir."""
-    import socket
-    import urllib.error
-    dead = True
-    for u in (c["url"], c.get("fallbackUrl")):
-        if not u:
-            continue
+def parse_m3u(text):
+    """M3U'yu (öznitelikler, başlık, adres, başlıklar) listesine çevirir."""
+    out, attrs, title, headers = [], None, "", {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("#EXTINF"):
+            attrs = dict(re.findall(r'([\w-]+)="([^"]*)"', line))
+            title = line.rsplit(",", 1)[-1].strip()
+            headers = {}
+        elif line.startswith("#EXTVLCOPT:http-user-agent="):
+            headers["User-Agent"] = line.split("=", 1)[1]
+        elif line.startswith("#EXTVLCOPT:http-referrer="):
+            headers["Referer"] = line.split("=", 1)[1]
+        elif line and not line.startswith("#") and attrs is not None:
+            out.append((attrs, title, line, headers))
+            attrs = None
+    return out
+
+
+def clean_title(t):
+    # "NOW TV (720p) [Not 24/7]" -> "NOW TV"; Free-TV'nin Ⓖ / Ⓨ işaretleri de atılır
+    t = re.sub(r"\s*\[[^\]]*\]", "", t)
+    t = re.sub(r"\s*\((\d{3,4}[pi]|4K|HD|SD)\)", "", t)
+    return re.sub(r"[ⒼⓎⓈ]", "", t).strip()
+
+
+_dns = {}
+
+
+def host_exists(url):
+    host = urlparse(url).hostname or ""
+    if host not in _dns:
         try:
-            h = {"User-Agent": "Mozilla/5.0", **c.get("headers", {})}
-            with urllib.request.urlopen(urllib.request.Request(u, headers=h), timeout=12) as r:
-                r.read(512)
-            if u != c["url"]:
-                c["url"] = u
-                c.pop("fallbackUrl", None)
-            return True
-        except urllib.error.HTTPError as e:
-            if e.code not in (404, 410):
-                dead = False
-        except urllib.error.URLError as e:
-            r = e.reason
-            if isinstance(r, (socket.timeout, TimeoutError)) or "timed out" in str(r):
-                dead = False
-            elif isinstance(r, socket.gaierror) or isinstance(r, ConnectionRefusedError):
-                pass
-            else:
-                dead = False  # SSL vb. belirsiz hatalar: listede kalsın
+            socket.getaddrinfo(host, None)
+            _dns[host] = True
+        except socket.gaierror:
+            _dns[host] = False
         except Exception:
-            dead = False
-    return not dead
+            _dns[host] = True
+    return _dns[host]
+
+
+def headers_of(ua, ref):
+    h = {}
+    if ua:
+        h["User-Agent"] = ua
+    if ref:
+        h["Referer"] = ref
+    return h
 
 
 def main():
     channels = {c["id"]: c for c in get("channels")}
     feeds = {(f["channel"], f["id"]): f for f in get("feeds")}
-    # Yurt dışı kanallarda yalnızca Türkçe yayın akışları (feed) alınır
     turkish = {k for k, f in feeds.items() if "tur" in f["languages"]}
     main_feed = {f["channel"]: f["id"] for f in feeds.values() if f["is_main"]}
     blocked = {b["channel"] for b in get("blocklist")}
@@ -99,30 +127,50 @@ def main():
         if lg["feed"] is None and lg["channel"] not in logos:
             logos[lg["channel"]] = lg["url"]
 
+    # Kanalı tanımsız akışların ülkesi: iptv-org/iptv'deki dosya adından (tr.m3u, tr_gem.m3u -> TR)
+    url_country = {}
+    files = [f["name"] for f in json.loads(fetch(IPTV_STREAMS)) if f["name"].endswith(".m3u")]
+
+    def load_file(name):
+        try:
+            return name, parse_m3u(fetch(IPTV_RAW + name))
+        except Exception:
+            return name, []
+
+    with ThreadPoolExecutor(16) as ex:
+        for name, entries in ex.map(load_file, files):
+            cc = re.split(r"[_.]", name)[0].upper()
+            for _, _, url, _ in entries:
+                url_country.setdefault(url, cc)
+
     ours = json.loads((ROOT / "channels.json").read_text(encoding="utf-8"))
     have = {c.get("iptv", "").split("@")[0] for c in ours["channels"]}
+    have_urls = {c.get("url") for c in ours["channels"]} | {c.get("fallbackUrl") for c in ours["channels"]}
 
-    out, seen, skipped = {}, set(), {"blok": 0, "paralı": 0, "belirsiz": 0, "mevcut": 0, "kapalı": 0}
+    out, seen = {}, set(have_urls)
+    skipped = {"blok": 0, "paralı": 0, "mevcut": 0, "kapalı": 0}
+
+    def bad(title, url):
+        return PAID.search(title) or ADULT.search(title) or any(h in url for h in BAD_HOSTS)
+
     for s in get("streams"):
-        cid = s["channel"]
-        url = s["url"]
+        cid, url = s["channel"], s["url"]
         ch = channels.get(cid) if cid else None
+        if url in seen:
+            continue
         if ch is None:
-            # Kanalı iptv-org'da tanımlı olmayan akışlar: başlığa göre süzülüp "Diğer"e girer
-            title = (s.get("title") or "").strip()
-            if not title or url in seen:
+            title = clean_title(s.get("title") or "")
+            if not title:
                 continue
-            if PAID.search(title) or any(h in url for h in BAD_HOSTS) or re.search(r"xxx|adult|porn|\+18|18\+", title, re.I):
+            if bad(title, url):
                 skipped["paralı"] += 1; continue
+            cc = url_country.get(url, "")
+            if "--tr" in sys.argv and cc != "TR":
+                continue
             seen.add(url)
-            item = {"id": "w:u:" + url[-60:], "name": title, "country": "", "url": url}
-            headers = {}
-            if s.get("user_agent"):
-                headers["User-Agent"] = s["user_agent"]
-            if s.get("referrer"):
-                headers["Referer"] = s["referrer"]
-            if headers:
-                item["headers"] = headers
+            item = {"id": "w:u:" + url[-60:], "name": title, "country": cc, "url": url}
+            if h := headers_of(s.get("user_agent"), s.get("referrer")):
+                item["headers"] = h
             out[("u", url)] = item
             continue
         if cid in blocked or ch["is_nsfw"] or "xxx" in ch["categories"]:
@@ -133,10 +181,8 @@ def main():
             continue
         if cid in have:
             skipped["mevcut"] += 1; continue
-        if PAID.search(ch["name"]) or PAID.search(s.get("title") or "") or any(h in url for h in BAD_HOSTS):
+        if bad(ch["name"], url) or PAID.search(s.get("title") or ""):
             skipped["paralı"] += 1; continue
-        if url in seen:
-            continue
         seen.add(url)
 
         key = (cid, s["feed"] or "")
@@ -148,37 +194,53 @@ def main():
         if feed and not feed["is_main"]:
             name += f" ({feed['name']})"
         item = {"id": f"w:{cid}@{s['feed'] or ''}", "name": name, "country": ch["country"], "url": url}
-        headers = {}
-        if s.get("user_agent"):
-            headers["User-Agent"] = s["user_agent"]
-        if s.get("referrer"):
-            headers["Referer"] = s["referrer"]
-        if headers:
-            item["headers"] = headers
+        if h := headers_of(s.get("user_agent"), s.get("referrer")):
+            item["headers"] = h
         if ch["categories"]:
             item["genre"] = ch["categories"][0]
         if cid in logos:
             item["logo"] = logos[cid]
         out[key] = item
 
-    from concurrent.futures import ThreadPoolExecutor
+    # Free-TV: iptv-org'da olmayan ücretsiz kanallar
+    freetv = 0
+    known_names = {(c["country"], c["name"].lower()) for c in out.values()}
+    for attrs, title, url, h in parse_m3u(fetch(FREETV)):
+        title = clean_title(title)
+        cc = (attrs.get("tvg-country") or "").upper()[:2]
+        if url in seen or not title or bad(title, url):
+            continue
+        if "--tr" in sys.argv and cc != "TR":
+            continue
+        if attrs.get("tvg-id") in have or (cc, title.lower()) in known_names:
+            continue
+        seen.add(url)
+        item = {"id": "w:f:" + url[-60:], "name": title, "country": cc, "url": url}
+        if h:
+            item["headers"] = h
+        if attrs.get("tvg-logo"):
+            item["logo"] = attrs["tvg-logo"]
+        out[("f", url)] = item
+        freetv += 1
+
     cands = list(out.values())
-    # Varsayılan: bölgeye göre eleme yok, hepsi listeye girer. --check ile açılmayanlar çıkarılır.
     if "--check" in sys.argv:
-        with ThreadPoolExecutor(128) as ex:
-            ok = list(ex.map(works, cands))
-        skipped["açılmayan"] = ok.count(False)
+        with ThreadPoolExecutor(64) as ex:
+            ok = list(ex.map(lambda c: host_exists(c["url"]) or host_exists(c.get("fallbackUrl") or c["url"]), cands))
+        skipped["alan adı yok"] = ok.count(False)
     else:
         ok = [True] * len(cands)
     items = sorted((c for c, k in zip(cands, ok) if k), key=lambda c: (c["country"], c["name"].lower()))
     data = {
-        "source": "https://github.com/iptv-org/api",
+        "source": "iptv-org/api + iptv-org/iptv + Free-TV/IPTV",
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "channels": items,
     }
     (ROOT / "world.json").write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    tr = sum(1 for c in items if c["country"] == "TR")
     countries = len({c["country"] for c in items})
-    print(f"world.json: {len(items)} kanal, {countries} ülke. Atlanan: {skipped}", file=sys.stderr)
+    print(f"world.json: {len(items)} kanal ({tr} Türkiye), {countries} ülke, Free-TV'den {freetv}. Atlanan: {skipped}",
+          file=sys.stderr)
 
 
 if __name__ == "__main__":
