@@ -844,7 +844,7 @@ class MainActivity : AppCompatActivity() {
         val cat = if (ctx >= 0 && current in channelsFor(shownKey)) ctx else categoryOf(current)
         if (prefs.getInt("hintShown", 0) < 3) {
             prefs.edit().putInt("hintShown", prefs.getInt("hintShown", 0) + 1).apply()
-            Toast.makeText(this, "Arama ve favoriler: sola iki kez basın\nFavori ekleme, ad değiştirme, gizleme: kanalda OK'a basılı tutun", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Arama, favoriler: sola 2 kez bas\nFavori/ad/gizle: OK'a basılı tut", Toast.LENGTH_LONG).show()
         }
         showCategory(cat)
         categoryList.scrollToPosition(cat)
