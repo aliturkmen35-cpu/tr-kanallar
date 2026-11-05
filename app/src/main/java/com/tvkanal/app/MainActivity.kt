@@ -131,6 +131,7 @@ class MainActivity : AppCompatActivity() {
         channelList.adapter = channelAdapter
 
         pendingId = SystemChannels.idFromIntent(intent)
+        autoHideLauncherIfReady()
         loadChannels()
         if (prefs.getBoolean("autoStart", true)) AutoStart.startWakeService(this)
         askOverlayPermissionOnce()
@@ -404,6 +405,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     3 -> if (launcherVisible()) confirmHideLauncher() else {
                         setLauncherVisible(true)
+                        prefs.edit().putBoolean("iconManual", true).apply() // bir daha kendiliğinden gizleme
                         Toast.makeText(this, "Alin's simgesi uygulamalar listesine geri geldi", Toast.LENGTH_LONG).show()
                         main.post { showSettings() }
                     }
@@ -420,6 +422,28 @@ class MainActivity : AppCompatActivity() {
     private fun launcherVisible(): Boolean =
         packageManager.getComponentEnabledSetting(launcherAlias) !=
             android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+
+    /**
+     * Simgeyi kendiliğinden gizle: TV'de Canlı TV uygulaması varsa ve izleyici orada Alin's
+     * kanallarını açtıysa (kanallar TV listesinde görünür), Alin's artık TV'nin kendi kanalı
+     * gibi oradan açılır; uygulamalar listesinde ayrıca durmasına gerek yok.
+     * İzleyici simgeyi Ayarlar'dan geri getirdiyse bir daha dokunulmaz.
+     */
+    private fun autoHideLauncherIfReady() {
+        if (!launcherVisible() || prefs.getBoolean("iconManual", false)) return
+        io.execute {
+            // Kanallar bir Canlı TV uygulamasında (TV markası fark etmez) açıldıysa Alin's oradan girilebilir
+            val ready = SystemChannels.userEnabledInLiveTv(this)
+            if (!ready) return@execute
+            main.post {
+                if (isFinishing || isDestroyed || !launcherVisible()) return@post
+                setLauncherVisible(false)
+                Toast.makeText(this,
+                    "Alin's artık TV'nin kendi kanalları arasında: Canlı TV'den ve ana ekrandan açılır\n(Simge için: MENU > Ayarlar)",
+                    Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     private fun setLauncherVisible(on: Boolean) {
         packageManager.setComponentEnabledSetting(launcherAlias,

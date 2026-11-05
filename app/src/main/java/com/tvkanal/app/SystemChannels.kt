@@ -182,6 +182,16 @@ object SystemChannels {
         }.onFailure { Log.w(TAG, "Rehber yazılamadı", it) }
     }
 
+    /** İzleyici TV'nin Canlı TV uygulamasında Alin's kanallarını açtı mı (en az bir kanal listede görünür)? */
+    fun userEnabledInLiveTv(context: Context): Boolean = runCatching {
+        var total = 0; var on = 0
+        context.contentResolver.query(TvContract.buildChannelsUriForInput(inputId(context)),
+            arrayOf(TvContract.Channels.COLUMN_BROWSABLE), null, null, null)
+            ?.use { c -> while (c.moveToNext()) { total++; if (c.getInt(0) == 1) on++ } }
+        Log.i(TAG, "Canlı TV'de açık kanal: $on / $total")
+        on > 0
+    }.onFailure { Log.w(TAG, "Canlı TV durumu okunamadı", it) }.getOrDefault(false)
+
     /** Kanalı doğrudan açan bağlantı: alins://kanal/<kimlik> */
     fun playIntent(context: Context, id: String): Intent =
         Intent(Intent.ACTION_VIEW, Uri.Builder().scheme(SCHEME).authority(HOST).appendPath(id).build())
