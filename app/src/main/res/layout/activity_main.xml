@@ -130,12 +130,25 @@
             android:textColor="@color/accent"
             android:textSize="28sp"
             android:textStyle="bold" />
-        <TextView
-            android:id="@+id/infoName"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/text"
-            android:textSize="28sp" />
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/infoName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text"
+                android:textSize="28sp" />
+            <!-- Grup (Alin's / ülke) ve saat: normal TV kanal bandı gibi -->
+            <TextView
+                android:id="@+id/infoMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/text_dim"
+                android:textSize="18sp"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- Hata / durum mesajı -->

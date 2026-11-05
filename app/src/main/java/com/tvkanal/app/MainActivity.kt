@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fireCredit: View
     private lateinit var infoNumber: TextView
     private lateinit var infoName: TextView
+    private lateinit var infoMeta: TextView
     private lateinit var statusText: TextView
 
     private var player: ExoPlayer? = null
@@ -72,6 +73,8 @@ class MainActivity : AppCompatActivity() {
     private var shownKey = ""                          // ekrandaki kategorinin anahtarı
     private var searchQuery = ""
     private var playContext: List<Int> = emptyList()   // ▲ ▼ ile gezilen liste (kanalın açıldığı kategori)
+    private var previous = -1                          // önceki kanal ("0" ya da LAST tuşu)
+    private var pendingId: String? = null              // ana ekran / Canlı TV'den istenen kanal
     private var current = -1
     private var retried = false
     private var lastBackPress = 0L
@@ -102,6 +105,7 @@ class MainActivity : AppCompatActivity() {
         infoBar = findViewById(R.id.infoBar)
         infoNumber = findViewById(R.id.infoNumber)
         infoName = findViewById(R.id.infoName)
+        infoMeta = findViewById(R.id.infoMeta)
         statusText = findViewById(R.id.statusText)
         qualityPanel = findViewById(R.id.qualityPanel)
         qualityList = findViewById(R.id.qualityList)
@@ -126,15 +130,23 @@ class MainActivity : AppCompatActivity() {
         channelList.layoutManager = LinearLayoutManager(this)
         channelList.adapter = channelAdapter
 
+        pendingId = SystemChannels.idFromIntent(intent)
         loadChannels()
-        AutoStart.startWakeService(this)
+        if (prefs.getBoolean("autoStart", true)) AutoStart.startWakeService(this)
         askOverlayPermissionOnce()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val id = SystemChannels.idFromIntent(intent) ?: return
+        val idx = channels.indexOfFirst { it.id == id }
+        if (idx >= 0) { hideList(); play(idx) } else pendingId = id
     }
 
     /** Otomatik açılış için "diğer uygulamaların üzerinde göster" izni ilk açılışta bir kez istenir. */
     private fun askOverlayPermissionOnce() {
         if (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this)) return
-        if (prefs.getBoolean("askedOverlay", false)) return
+        if (prefs.getBoolean("askedOverlay", false) || !prefs.getBoolean("autoStart", true)) return
         prefs.edit().putBoolean("askedOverlay", true).apply()
         Toast.makeText(this,
             "TV açılınca Alin's'in kendiliğinden açılması için açılan ekranda Alin's'e izin verin",
@@ -172,10 +184,12 @@ class MainActivity : AppCompatActivity() {
             showStatus("Listede kanal yok")
             return
         }
-        val lastId = prefs.getString("last", null)
+        val lastId = pendingId ?: prefs.getString("last", null)
         val start = channels.indexOfFirst { it.id == lastId }.takeIf { it >= 0 } ?: 0
+        if (channels.getOrNull(start)?.id == pendingId) pendingId = null
         play(start)
         loadWorld(lastId)
+        loadEpg()
     }
 
     /** Dünya kanallarını (iptv-org) arka planda yükleyip Alin's listesinin arkasına ekler. */
@@ -203,7 +217,8 @@ class MainActivity : AppCompatActivity() {
     private fun rebuild() {
         val curId = channels.getOrNull(current)?.id
         val ctxIds = playContext.mapNotNull { channels.getOrNull(it)?.id }
-        channels = (baseCurated + baseWorld + edits.custom).map { c ->
+        val world = if (prefs.getBoolean("showWorld", true)) baseWorld else emptyList()
+        channels = (baseCurated + world + edits.custom).map { c ->
             edits.names[c.id]?.let { c.copy(name = it) } ?: c
         }
         val index = HashMap<String, Int>(channels.size * 2)
@@ -213,6 +228,29 @@ class MainActivity : AppCompatActivity() {
         rebuildCategories()
         val keep = categories.indexOfFirst { it.key == shownKey }
         showCategory(if (keep >= 0) keep else categoryOf(current))
+        scheduleSystemSync()
+    }
+
+    /** Yayın akışını indir; sonra bandı ve TV rehberini güncelle. 3 saatte bir yenilenir. */
+    private val epgRefresh = Runnable { loadEpg() }
+    private fun loadEpg() {
+        main.removeCallbacks(epgRefresh)
+        io.execute {
+            Epg.load(this)
+            main.post {
+                if (isFinishing || isDestroyed) return@post
+                if (infoBar.visibility == View.VISIBLE && current >= 0 && typed.isEmpty()) showInfo(current)
+                scheduleSystemSync()
+                main.postDelayed(epgRefresh, 3 * 3600_000L)
+            }
+        }
+    }
+
+    /** TV'nin kanal sistemine ve ana ekran satırına yaz (birkaç saniye bekleyip tek seferde). */
+    private val systemSync = Runnable { io.execute { SystemChannels.syncAll(this) } }
+    private fun scheduleSystemSync() {
+        main.removeCallbacks(systemSync)
+        main.postDelayed(systemSync, 4000)
     }
 
     private fun idIndex(): Map<String, Int> {
@@ -231,6 +269,7 @@ class MainActivity : AppCompatActivity() {
             groups.forEach { add(Cat("g:$it", "$it (${counts[it]})")) }
             add(Cat("add", "✚ Kanal ekle"))
             if (edits.hidden.isNotEmpty()) add(Cat("hidden", "Gizlenenler (${edits.hidden.size})"))
+            add(Cat("settings", "⚙ Ayarlar"))
         }
         categoryAdapter.submit(categories.map { RowAdapter.Row("", it.title) })
     }
@@ -271,6 +310,7 @@ class MainActivity : AppCompatActivity() {
         when (categories.getOrNull(pos)?.key) {
             "search" -> askSearch()
             "add" -> askAddChannel()
+            "settings" -> showSettings()
             else -> focusChannels()
         }
     }
@@ -329,6 +369,44 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showSettings() {
+        val auto = prefs.getBoolean("autoStart", true)
+        val world = prefs.getBoolean("showWorld", true)
+        val items = arrayOf(
+            "TV açılınca Alin's açılsın: " + if (auto) "AÇIK" else "KAPALI",
+            "Dünya kanalları: " + if (world) "GÖSTER" else "GİZLE",
+            "Kanalları TV'nin kanal listesine ve ana ekrana ekle",
+            "Alin's sürüm ${BuildConfig.VERSION_NAME}",
+        )
+        AlertDialog.Builder(this)
+            .setTitle("Ayarlar")
+            .setItems(items) { _, which ->
+                when (which) {
+                    0 -> {
+                        prefs.edit().putBoolean("autoStart", !auto).apply()
+                        if (!auto) { AutoStart.startWakeService(this); askOverlayPermissionOnce() }
+                        else stopService(Intent(this, WakeService::class.java))
+                        Toast.makeText(this, if (!auto) "TV açılınca Alin's açılacak" else "Otomatik açılış kapatıldı", Toast.LENGTH_SHORT).show()
+                    }
+                    1 -> {
+                        prefs.edit().putBoolean("showWorld", !world).apply()
+                        shownKey = ""
+                        rebuild()
+                    }
+                    2 -> io.execute {
+                        val n = SystemChannels.syncAll(this, force = true)
+                        main.post {
+                            Toast.makeText(this,
+                                if (n > 0) "$n kanal TV'nin kanal listesine eklendi\nAna ekranda \"Alin's TV\" satırı" else "TV bu özelliği desteklemiyor",
+                                Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+                if (which <= 1) main.post { showSettings() }
+            }
+            .show()
+    }
+
     /** Kanal satırında OK'a uzun basınca açılan seçenekler. */
     private fun showChannelOptions(index: Int) {
         val ch = channels.getOrNull(index) ?: return
@@ -363,6 +441,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Listeyi yeniler; odak verilen kanalda (yoksa aynı satırda) kalır. */
     private fun refreshList(focusId: String? = null) {
+        scheduleSystemSync()
         val row = channelAdapter.selected
         rebuildCategories()
         val keep = categories.indexOfFirst { it.key == shownKey }
@@ -524,6 +603,7 @@ class MainActivity : AppCompatActivity() {
             radioCard.visibility = View.GONE
             updateRadioBackground(false)
         }
+        if (index != current && current >= 0) previous = current
         current = index
         prefs.edit().putString("last", ch.id).apply()
         channelAdapter.selected = shownChannels.indexOf(index)
@@ -820,11 +900,16 @@ class MainActivity : AppCompatActivity() {
     private val hideInfo = Runnable { infoBar.visibility = View.GONE }
 
     private fun showInfo(index: Int) {
+        val ch = channels[index]
         infoNumber.text = "${index + 1}"
-        infoName.text = channels[index].name
+        infoName.text = (if (edits.isFavorite(ch.id)) "♥ " else "") + ch.name
+        val clock = java.text.SimpleDateFormat("HH:mm", java.util.Locale("tr", "TR")).format(java.util.Date())
+        val now = Epg.line(ch.id)
+        infoMeta.text = "${if (ch.isRadio) "Radyo" else ch.group}  ·  $clock" + (now?.let { "\n$it" } ?: "")
+        infoMeta.visibility = View.VISIBLE
         infoBar.visibility = View.VISIBLE
         main.removeCallbacks(hideInfo)
-        main.postDelayed(hideInfo, 3500)
+        main.postDelayed(hideInfo, if (Epg.programs(channels[index].id).isEmpty()) 3500 else 6000)
     }
 
     private fun showStatus(msg: String) {
@@ -899,6 +984,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             // Kalite izleyiciye gösterilmez, arka planda otomatik ayarlanır (en az 480p)
+            KeyEvent.KEYCODE_LAST_CHANNEL -> { if (previous >= 0) play(previous); return true }
             KeyEvent.KEYCODE_INFO -> {
                 if (current >= 0) showInfo(current); return true
             }
@@ -934,13 +1020,16 @@ class MainActivity : AppCompatActivity() {
     private val commitNumber = Runnable {
         val n = typed.toIntOrNull()
         typed = ""
-        if (n != null && n in 1..channels.size) play(n - 1) else if (current >= 0) showInfo(current)
+        // Tek başına "0": önceki kanala dön (TV kumandalarındaki gibi)
+        if (n == 0 && previous >= 0) play(previous)
+        else if (n != null && n in 1..channels.size) play(n - 1) else if (current >= 0) showInfo(current)
     }
 
     private fun numberInput(d: Int) {
         typed += d
         infoNumber.text = typed
         infoName.text = ""
+        infoMeta.visibility = View.GONE
         infoBar.visibility = View.VISIBLE
         main.removeCallbacks(commitNumber)
         main.postDelayed(commitNumber, 1500)

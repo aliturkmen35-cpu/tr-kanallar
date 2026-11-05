@@ -44,6 +44,17 @@ class ChannelRepository(private val context: Context) {
 
     private val worldCache = File(context.filesDir, "world_cache.json")
 
+    /** İnternete çıkmadan Alin's listesi: son indirilen, yoksa APK içindeki yedek. */
+    fun cachedCurated(): List<Channel> = runCatching {
+        if (cacheFile.exists()) parse(cacheFile.readText()).takeIf { it.isNotEmpty() } else null
+    }.getOrNull() ?: runCatching {
+        parse(context.assets.open("channels.json").bufferedReader().use { it.readText() })
+    }.getOrDefault(emptyList())
+
+    /** İnternete çıkmadan dünya kanalları (son indirilen). */
+    fun cachedWorld(): List<Channel> =
+        runCatching { if (worldCache.exists()) parseWorld(worldCache.readText()) else emptyList() }.getOrDefault(emptyList())
+
     /**
      * iptv-org'dan derlenen dünya kanalları (world.json, kanal listesinin yanında durur).
      * Ağ çağrısı yapar. Sunucuya ulaşılamazsa son indirilen kullanılır; o da yoksa boş liste.

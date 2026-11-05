@@ -19,8 +19,8 @@ android {
         applicationId = "com.tvkanal.app"
         minSdk = 21 // Android 5.0 ve üstü bütün TV'ler
         targetSdk = 34
-        versionCode = 27
-        versionName = "3.16"
+        versionCode = 28
+        versionName = "3.17"
         // Kanal listesinin sunucudaki adresi
         buildConfigField(
             "String", "CHANNELS_URL",
@@ -62,4 +62,5 @@ dependencies {
     implementation("androidx.media3:media3-ui:$media3")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.tvprovider:tvprovider:1.0.0")
 }

@@ -36,6 +36,9 @@ object AutoStart {
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        // Güncelleme sonrası kanal listesini TV sistemine yeniden yaz
+        Thread { SystemChannels.syncAll(context) }.start()
+        if (!context.getSharedPreferences("tv", Context.MODE_PRIVATE).getBoolean("autoStart", true)) return
         AutoStart.startWakeService(context)
         AutoStart.launchApp(context)
     }
@@ -45,7 +48,8 @@ class WakeService : Service() {
 
     private val screenOn = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            AutoStart.launchApp(context)
+            if (context.getSharedPreferences("tv", Context.MODE_PRIVATE).getBoolean("autoStart", true))
+                AutoStart.launchApp(context)
         }
     }
 
