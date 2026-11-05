@@ -266,10 +266,10 @@ class MainActivity : AppCompatActivity() {
         categories = buildList {
             add(Cat("search", if (searchQuery.isBlank()) "🔍 Kanal ara" else "🔍 Ara: $searchQuery"))
             add(Cat("fav", "♥ Favoriler (${edits.favorites.size})"))
-            groups.forEach { add(Cat("g:$it", "$it (${counts[it]})")) }
-            add(Cat("add", "✚ Kanal ekle"))
-            if (edits.hidden.isNotEmpty()) add(Cat("hidden", "Gizlenenler (${edits.hidden.size})"))
             add(Cat("settings", "⚙ Ayarlar"))
+            add(Cat("add", "✚ Kanal ekle"))
+            groups.forEach { add(Cat("g:$it", "$it (${counts[it]})")) }
+            if (edits.hidden.isNotEmpty()) add(Cat("hidden", "Gizlenenler (${edits.hidden.size})"))
         }
         categoryAdapter.submit(categories.map { RowAdapter.Row("", it.title) })
     }
@@ -376,6 +376,7 @@ class MainActivity : AppCompatActivity() {
             "TV açılınca Alin's açılsın: " + if (auto) "AÇIK" else "KAPALI",
             "Dünya kanalları: " + if (world) "GÖSTER" else "GİZLE",
             "Kanalları TV'nin kanal listesine ve ana ekrana ekle",
+            "Uygulamalar listesinde simge: " + if (launcherVisible()) "GÖRÜNÜR" else "GİZLİ (yalnızca TV kanalı)",
             "Alin's sürüm ${BuildConfig.VERSION_NAME}",
         )
         AlertDialog.Builder(this)
@@ -401,9 +402,49 @@ class MainActivity : AppCompatActivity() {
                                 Toast.LENGTH_LONG).show()
                         }
                     }
+                    3 -> if (launcherVisible()) confirmHideLauncher() else {
+                        setLauncherVisible(true)
+                        Toast.makeText(this, "Alin's simgesi uygulamalar listesine geri geldi", Toast.LENGTH_LONG).show()
+                        main.post { showSettings() }
+                    }
                 }
                 if (which <= 1) main.post { showSettings() }
             }
+            .show()
+    }
+
+    // ---- Uygulamalar listesindeki simge (gizlenince Alin's yalnızca TV kanal sistemi gibi durur) ----
+
+    private val launcherAlias get() = android.content.ComponentName(this, "$packageName.Launcher")
+
+    private fun launcherVisible(): Boolean =
+        packageManager.getComponentEnabledSetting(launcherAlias) !=
+            android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+
+    private fun setLauncherVisible(on: Boolean) {
+        packageManager.setComponentEnabledSetting(launcherAlias,
+            if (on) android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            else android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            android.content.pm.PackageManager.DONT_KILL_APP)
+    }
+
+    private fun confirmHideLauncher() {
+        AlertDialog.Builder(this)
+            .setTitle("Simge gizlensin mi?")
+            .setMessage("Alin's uygulamalar listesinde görünmez; TV'nin kendi kanalları gibi kullanılır:\n\n" +
+                "• TV'nin Canlı TV / Kanallar uygulaması (kaynak: Alin's)\n" +
+                "• Ana ekrandaki \"Alin's TV\" satırı\n" +
+                "• TV açılınca kendiliğinden açılış\n\n" +
+                "Simgeyi geri getirmek için: Alin's açıkken Ayarlar > Uygulamalar listesinde simge.")
+            .setPositiveButton("Gizle") { _, _ ->
+                setLauncherVisible(false)
+                prefs.edit().putBoolean("autoStart", true).apply()
+                AutoStart.startWakeService(this)
+                Toast.makeText(this, "Alin's artık TV'nin kanal sisteminden açılır", Toast.LENGTH_LONG).show()
+                // TV kanal sistemi ve ana ekran satırı hazır olsun
+                io.execute { SystemChannels.syncAll(this, force = true) }
+            }
+            .setNegativeButton("Vazgeç", null)
             .show()
     }
 
@@ -974,7 +1015,9 @@ class MainActivity : AppCompatActivity() {
             // OK tuşu: liste tuş bırakılınca açılır. Basılırken açılırsa, bırakma anı
             // listedeki kanala "tıklama" sayılıp listeyi hemen kapatıyordu.
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> { openOnKeyUp = true; return true }
-            KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
+            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_GUIDE -> { showList(); return true }
+            // Kumandanın Menü / Ayarlar tuşu: Alin's ayarları
+            KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_SETTINGS -> { showSettings(); return true }
             // Radyodayken sağ tuş: şömine ↔ doğa manzarası
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                 if (channels.getOrNull(current)?.isRadio == true) {

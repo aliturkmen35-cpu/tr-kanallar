@@ -32,11 +32,6 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-            </intent-filter>
             <!-- Ana ekran satırından ya da Canlı TV'den belirli bir kanalı açmak için: alins://kanal/<kimlik> -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -45,6 +40,22 @@
                 <data android:scheme="alins" android:host="kanal" />
             </intent-filter>
         </activity>
+
+        <!-- Uygulama listesindeki simge. Ayarlar'dan gizlenebilir: o zaman Alin's yalnızca
+             TV'nin Canlı TV / Kanallar uygulamasından, ana ekran satırından ve açılışta gelir. -->
+        <activity-alias
+            android:name=".Launcher"
+            android:banner="@drawable/banner"
+            android:enabled="true"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- TV'nin kendi canlı yayın altyapısına (TV Input Framework) kaynak olarak bağlanır -->
         <service
