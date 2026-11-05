@@ -72,8 +72,15 @@ def main():
             title = (p.findtext("title") or "").strip()
             if title:
                 epg.setdefault(cid, []).append([a, b, title[:80]])
-    for v in epg.values():
+    # Aynı kanal birden çok kaynak kimliğinden (HD/SD) eşleşebilir: çakışan kayıtları ayıkla
+    for cid, v in epg.items():
         v.sort()
+        clean = []
+        for p in v:
+            if clean and p[0] < clean[-1][1]:
+                continue  # öncekiyle çakışıyor (kopya)
+            clean.append(p)
+        epg[cid] = clean
     out = {"updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "epg": epg}
     (ROOT / "epg.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"epg.json: {len(epg)} kanal, {sum(len(v) for v in epg.values())} program", file=sys.stderr)
