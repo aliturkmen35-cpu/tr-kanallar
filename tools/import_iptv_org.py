@@ -4,6 +4,8 @@ Kaynaklar:
   - iptv-org/api (https://github.com/iptv-org/api, Unlicense): kanal bilgileri ve akışlar
   - iptv-org/iptv streams/*.m3u: kanalı tanımsız akışların hangi ülkeye ait olduğu
   - Free-TV/IPTV (https://github.com/Free-TV/IPTV): elle seçilmiş ücretsiz/yasal kanallar
+  - sources/tr_playlist.m3u: kullanıcının Türkiye listesi. Bizde olan kanala yedek adres olur,
+    olmayan kanal Türkiye'ye eklenir; Alin's kanallarında yedeği olmayana channels.json'da yedek yazılır.
 
 Dışarıda bırakılanlar:
   - iptv-org'un engel listesi (DMCA ve +18), +18 ya da kapanmış kanallar
@@ -47,12 +49,12 @@ PAID = re.compile(
     r"sundance|e! ?entertainment|baby ?tv|cbeebies|cbbc|da vinci|duck ?tv|"
     r"sony ?(channel|max|pix|sab|entertainment|yay|aath|marathi|wah|bbc earth)|"
     r"star ?(plus|gold|bharat|movies|jalsha|pravah|vijay|maa|suvarna|world|life|utsav|channel)|"
-    r"colors ?(tv|cineplex|bangla|marathi|kannada|tamil|gujarati|rishtey|infinity)?)\b",
+    r"colors ?(tv|cineplex|bangla|marathi|kannada|tamil|gujarati|rishtey|infinity)?|kanal ?d ?drama)\b",
     re.I,
 )
 ADULT = re.compile(r"xxx|adult|porn|\+18|18\+|erotic|hustler|playboy|brazzers", re.I)
 BAD_HOSTS = ("mangeinde", "siteyaptim", "tv.vin", "streameast", "crichd", "hesgoal", "totalsportek",
-             ".cfd/", "workers.dev", "stmify", "mangora")
+             ".cfd/", "workers.dev", "stmify", "mangora", "iptvperu")
 
 
 def fetch(url, timeout=60):
@@ -222,6 +224,49 @@ def main():
             item["logo"] = attrs["tvg-logo"]
         out[("f", url)] = item
         freetv += 1
+
+    # Kullanıcının Türkiye listesi (sources/tr_playlist.m3u)
+    local, extra_fb, curated_fb = 0, 0, 0
+    lp = ROOT / "sources" / "tr_playlist.m3u"
+    if lp.exists():
+        by_cid = {}
+        for k, c in out.items():
+            if c["id"].startswith("w:") and "@" in c["id"] and not c["id"].startswith(("w:u:", "w:f:")):
+                by_cid.setdefault(c["id"][2:].split("@")[0], c)
+        curated = {c.get("iptv", "").split("@")[0]: c for c in ours["channels"] if c.get("iptv")}
+        for attrs, title, url, h in parse_m3u(lp.read_text(encoding="utf-8")):
+            title = clean_title(title)
+            cid = (attrs.get("tvg-id") or "").split("@")[0]
+            if not title or bad(title, url):
+                continue
+            if cid in curated:
+                c = curated[cid]
+                if url not in (c.get("url"), c.get("fallbackUrl")) and not c.get("fallbackUrl") and not c.get("stayOriginal"):
+                    c["fallbackUrl"] = url
+                    curated_fb += 1
+                continue
+            if url in seen:
+                continue
+            seen.add(url)
+            if cid in by_cid:
+                c = by_cid[cid]
+                if not c.get("fallbackUrl") and c["url"] != url:
+                    c["fallbackUrl"] = url
+                    extra_fb += 1
+                continue
+            item = {"id": "w:p:" + (cid or url[-60:]), "name": title, "country": "TR", "url": url}
+            if h:
+                item["headers"] = h
+            if attrs.get("tvg-logo"):
+                item["logo"] = attrs["tvg-logo"]
+            out[("p", url)] = item
+            if cid:
+                by_cid[cid] = item
+            local += 1
+        if curated_fb:
+            (ROOT / "channels.json").write_text(json.dumps(ours, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"Türkiye listesi: {local} yeni kanal, {extra_fb} dünya + {curated_fb} Alin's kanalına yedek adres",
+          file=sys.stderr)
 
     cands = list(out.values())
     if "--check" in sys.argv:

@@ -1,5 +1,5 @@
 {
-  "version": 22,
+  "version": 23,
   "updated": "2026-10-25 10:00 UTC",
   "channels": [
     {
@@ -64,7 +64,8 @@
       "page": "https://player-live.dygdigital.com/js/build.js",
       "pattern": "Startv:\\{development:\\\"(https://dogus\\.daioncdn\\.net/startv/[^\\\"]+)\\\"",
       "iptv": "StarTV.tr",
-      "web": false
+      "web": false,
+      "fallbackUrl": "https://dogus.daioncdn.net/startv/startv_720p.m3u8?app=a20ac41e-bdc3-4aa1-934d-26b484480ac9&ce=3&sid=8l4w3lst4co5"
     },
     {
       "id": "nowtv",
@@ -84,7 +85,8 @@
       "page": "https://www.tv8.com.tr/canli-yayin",
       "pattern": "https://tv8\\.daioncdn\\.net/[^\\\"'<>\\s]+",
       "iptv": "TV8.tr",
-      "web": false
+      "web": false,
+      "fallbackUrl": "https://tv8-live.daioncdn.net/tv8/tv8.m3u8"
     },
     {
       "id": "kanal7",
@@ -141,7 +143,8 @@
       },
       "page": "https://www.tv360.com.tr/canli-yayin",
       "pattern": "https://turkmedya-live\\.ercdn\\.net/tv360/[^\\\"'<>\\s]+",
-      "iptv": "360.tr"
+      "iptv": "360.tr",
+      "fallbackUrl": "https://turkmedya-live.ercdn.net/tv360/tv360.m3u8"
     },
     {
       "id": "trthaber",
@@ -161,7 +164,8 @@
       "page": "https://www.haberturk.com/canliyayin",
       "pattern": "https://ciner\\.daioncdn\\.net/haberturktv/[^\\\"'<>\\s]+",
       "iptv": "HaberturkTV.tr",
-      "web": false
+      "web": false,
+      "fallbackUrl": "https://tv.ensonhaber.com/haberturk/haberturk.m3u8"
     },
     {
       "id": "ntv",
@@ -232,14 +236,16 @@
       },
       "page": "https://www.tgrthaber.com/canli-yayin",
       "pattern": "https://canli\\.tgrthaber\\.com/[^\\\"'<>\\s]+\\.m3u8",
-      "iptv": "TGRTHaber.tr"
+      "iptv": "TGRTHaber.tr",
+      "fallbackUrl": "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe4598be8e5d.smil/playlist.m3u8"
     },
     {
       "id": "trtworld",
       "name": "TRT World",
       "category": "Haber",
       "url": "https://tv-trtworld.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTWorld.tr"
+      "iptv": "TRTWorld.tr",
+      "fallbackUrl": "https://cdn.pishow.tv/ott/live/266/master.m3u8"
     },
     {
       "id": "trtarabi",
@@ -260,7 +266,8 @@
       "name": "TRT Müzik",
       "category": "Müzik",
       "url": "https://tv-trtmuzik.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTMuzik.tr"
+      "iptv": "TRTMuzik.tr",
+      "fallbackUrl": "https://stream8.cinerama.uz/1208/tracks-v1a1/mono.m3u8"
     },
     {
       "id": "trtturk",
@@ -327,14 +334,16 @@
       "name": "Power Türk TV",
       "category": "Müzik",
       "url": "https://livetv.powerapp.com.tr/powerturkTV/powerturkhd.smil/playlist.m3u8",
-      "iptv": "PowerTurkTV.tr"
+      "iptv": "PowerTurkTV.tr",
+      "fallbackUrl": "https://mn-nl.mncdn.com/blutv_powerturk/smil:powerturk_sd.smil/playlist.m3u8"
     },
     {
       "id": "number1",
       "name": "Number 1 TV",
       "category": "Müzik",
       "url": "https://b01c02nl.mediatriple.net/videoonlylive/mtkgeuihrlfwlive/broadcast_5c9e17cd59e8b.smil/playlist.m3u8",
-      "iptv": "Number1TV.tr"
+      "iptv": "Number1TV.tr",
+      "fallbackUrl": "https://mn-nl.mncdn.com/blutv_nr12/live.m3u8"
     },
     {
       "id": "cnbce",
@@ -348,7 +357,8 @@
       "name": "24 TV",
       "category": "Haber",
       "url": "https://turkmedya-live.ercdn.net/tv24/tv24.m3u8",
-      "iptv": "24TV.tr"
+      "iptv": "24TV.tr",
+      "fallbackUrl": "https://tv.ensonhaber.com/tv24/tv24.m3u8"
     },
     {
       "id": "htspor",
@@ -365,14 +375,16 @@
       "name": "Minika Çocuk",
       "category": "Çocuk",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago_cocuk/minikago_cocuk.m3u8",
-      "iptv": "MinikaCocuk.tr"
+      "iptv": "MinikaCocuk.tr",
+      "fallbackUrl": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago_cocuk/minikago_cocuk.m3u8"
     },
     {
       "id": "minikago",
       "name": "Minika Go",
       "category": "Çocuk",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago/minikago.m3u8",
-      "iptv": "MinikaGo.tr"
+      "iptv": "MinikaGo.tr",
+      "fallbackUrl": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago/minikago.m3u8"
     },
     {
       "id": "diyanet",
