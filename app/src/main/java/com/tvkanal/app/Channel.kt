@@ -24,6 +24,8 @@ data class Channel(
     val youtube: String = "",
     /** true ise kanal kendi yayınından vazgeçmez: yedeğe/YouTube'a geçmeden yeniden bağlanır. */
     val stayOriginal: Boolean = false,
+    /** Listede soldaki sütun: "Alin's" ya da dünya kanallarında ülke adı. */
+    val group: String = "Alin's",
 ) {
     val isRadio get() = type == "radio"
     val hasFallback get() = fallbackUrl.isNotBlank() || fallbackPage.isNotBlank()

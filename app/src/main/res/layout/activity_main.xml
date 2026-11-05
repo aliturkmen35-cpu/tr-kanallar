@@ -186,12 +186,12 @@
         android:paddingBottom="32dp"
         android:visibility="gone">
 
-        <!-- Kategori sütunu kaldırıldı: yalnızca tek kanal listesi gösterilir -->
+        <!-- Sol sütun: Alin's + ülkeler (iptv-org dünya kanalları) -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/categoryList"
-            android:layout_width="0dp"
+            android:layout_width="300dp"
             android:layout_height="match_parent"
-            android:visibility="gone" />
+            android:paddingStart="24dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/channelList"

@@ -1,0 +1,32 @@
+name: Dünya kanalları (iptv-org)
+
+on:
+  schedule:
+    - cron: "0 4 * * 1"   # her pazartesi 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: iptv-org listesini al, açılan kanalları süz
+        run: python tools/import_iptv_org.py --check
+      - name: Değişiklikleri kaydet
+        run: |
+          git config user.name "kanal-botu"
+          git config user.email "kanal-botu@users.noreply.github.com"
+          git pull --rebase
+          git add world.json
+          if git diff --cached --quiet; then
+            echo "Değişiklik yok"
+          else
+            git commit -m "Dünya kanalları güncellendi (iptv-org)"
+            git push
+          fi

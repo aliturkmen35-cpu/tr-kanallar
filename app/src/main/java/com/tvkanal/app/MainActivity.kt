@@ -147,8 +147,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setChannels(list: List<Channel>) {
         channels = list
-        categories = listOf("Tümü") + list.map { it.category }.distinct()
-        categoryAdapter.submit(categories.map { RowAdapter.Row("", it) })
+        rebuildCategories()
         showCategory(0)
         if (list.isEmpty()) {
             showStatus("Listede kanal yok")
@@ -157,12 +156,38 @@ class MainActivity : AppCompatActivity() {
         val lastId = prefs.getString("last", null)
         val start = list.indexOfFirst { it.id == lastId }.takeIf { it >= 0 } ?: 0
         play(start)
+        loadWorld(lastId)
+    }
+
+    /** Dünya kanallarını (iptv-org) arka planda yükleyip Alin's listesinin arkasına ekler. */
+    private fun loadWorld(lastId: String?) {
+        io.execute {
+            val world = runCatching { ChannelRepository(this).loadWorld() }.getOrDefault(emptyList())
+            if (world.isEmpty()) return@execute
+            main.post {
+                if (isFinishing || isDestroyed) return@post
+                channels = channels.filter { it.group == "Alin's" } + world
+                rebuildCategories()
+                showCategory(categories.indexOf(channels.getOrNull(current)?.group).coerceAtLeast(0))
+                // Son izlenen bir dünya kanalıysa ona geç
+                if (lastId != null && channels.getOrNull(current)?.id != lastId) {
+                    val idx = channels.indexOfFirst { it.id == lastId }
+                    if (idx >= 0) play(idx)
+                }
+            }
+        }
+    }
+
+    private fun rebuildCategories() {
+        categories = channels.map { it.group }.distinct()
+        val counts = channels.groupingBy { it.group }.eachCount()
+        categoryAdapter.submit(categories.map { RowAdapter.Row("", "$it (${counts[it]})") })
     }
 
     private fun showCategory(pos: Int) {
         val cat = categories.getOrNull(pos) ?: return
         categoryAdapter.selected = pos
-        shownChannels = channels.indices.filter { pos == 0 || channels[it].category == cat }
+        shownChannels = channels.indices.filter { channels[it].group == cat }
         channelAdapter.submit(shownChannels.map { RowAdapter.Row("${it + 1}", channels[it].name) })
         channelAdapter.selected = shownChannels.indexOf(current)
     }
@@ -589,8 +614,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun step(delta: Int) {
         if (channels.isEmpty()) return
-        val next = ((if (current < 0) 0 else current) + delta + channels.size) % channels.size
-        play(next)
+        // ▲ ▼ yalnızca o anki grubun (Alin's ya da bir ülke) içinde gezinir
+        val group = channels.getOrNull(current)?.group ?: channels[0].group
+        val inGroup = channels.indices.filter { channels[it].group == group }
+        val pos = inGroup.indexOf(current).coerceAtLeast(0)
+        play(inGroup[(pos + delta + inGroup.size) % inGroup.size])
     }
 
     // ---- Arayüz yardımcıları ----
@@ -617,8 +645,10 @@ class MainActivity : AppCompatActivity() {
     private fun showList() {
         if (channels.isEmpty()) return
         listPanel.visibility = View.VISIBLE
-        // Açılışta o anki kanalın kategorisi yerine "Tümü" seçili gelsin, odak oynayan kanalda olsun
-        showCategory(0)
+        // Oynayan kanalın grubu (Alin's ya da ülke) seçili gelsin, odak oynayan kanalda olsun
+        val cat = categories.indexOf(channels.getOrNull(current)?.group).coerceAtLeast(0)
+        showCategory(cat)
+        categoryList.scrollToPosition(cat)
         focusChannels()
     }
 
