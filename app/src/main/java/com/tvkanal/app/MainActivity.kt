@@ -64,7 +64,12 @@ class MainActivity : AppCompatActivity() {
     private var retried = false
     private var lastBackPress = 0L
 
-    private val categoryAdapter = RowAdapter(onClick = { focusChannels() }, onFocus = { showCategory(it) })
+    // Odak değişimi liste kayarken gelebilir; o sırada listeyi güncellemek çöker, bir sonraki ana ertele
+    private val categoryAdapter = RowAdapter(onClick = { focusChannels() }, onFocus = { onCategoryFocus(it) })
+
+    private fun onCategoryFocus(pos: Int) {
+        main.post { if (categoryAdapter.selected != pos) showCategory(pos) }
+    }
     private val channelAdapter = RowAdapter(onClick = { pos ->
         shownChannels.getOrNull(pos)?.let { play(it); hideList() }
     })

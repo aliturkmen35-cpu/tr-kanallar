@@ -6,7 +6,7 @@ topladığı herkese açık yayınlardır.
 Dışarıda bırakılanlar:
   - iptv-org'un kendi engel listesi (telif şikâyeti / DMCA ve +18)
   - +18 işaretli, kapanmış ya da "xxx" kategorili kanallar
-  - hangi kanala ait olduğu belirsiz akışlar (ülke/sahip bilinmiyor)
+  (kanalı belirsiz akışlar başlığa göre aynı süzgeçten geçip "Diğer"e girer)
   - paralı spor/film platformları (beIN, S Sport, Sky, DAZN, HBO...): bunlar
     ücretsiz dağıtılmaz, listede görünüyorlarsa izinsiz yayındır
   - bilinen korsan sunucular
@@ -108,7 +108,23 @@ def main():
         url = s["url"]
         ch = channels.get(cid) if cid else None
         if ch is None:
-            skipped["belirsiz"] += 1; continue
+            # Kanalı iptv-org'da tanımlı olmayan akışlar: başlığa göre süzülüp "Diğer"e girer
+            title = (s.get("title") or "").strip()
+            if not title or url in seen:
+                continue
+            if PAID.search(title) or any(h in url for h in BAD_HOSTS) or re.search(r"xxx|adult|porn|\+18|18\+", title, re.I):
+                skipped["paralı"] += 1; continue
+            seen.add(url)
+            item = {"id": "w:u:" + url[-60:], "name": title, "country": "", "url": url}
+            headers = {}
+            if s.get("user_agent"):
+                headers["User-Agent"] = s["user_agent"]
+            if s.get("referrer"):
+                headers["Referer"] = s["referrer"]
+            if headers:
+                item["headers"] = headers
+            out[("u", url)] = item
+            continue
         if cid in blocked or ch["is_nsfw"] or "xxx" in ch["categories"]:
             skipped["blok"] += 1; continue
         if ch["closed"]:
