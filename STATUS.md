@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-08 17:12 UTC · 58/62 kanal erişilebilir
+Son kontrol: 2026-11-08 21:18 UTC · 55/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -27,14 +27,14 @@ bir kanal Türkiye'den açılıyor olabilir.
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
-| TRT Arabi | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Müzik | ✅ |  |
-| TRT Türk | ✅ |  |
-| TRT Avaz | ✅ |  |
+| TRT Arabi | ✅ |  |
+| TRT Çocuk | ✅ |  |
+| TRT Müzik | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Avaz | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Kurdî | ✅ |  |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Genç | ✅ |  |
+| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
@@ -55,7 +55,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Radyo 7 | ✅ |  |
 | Süper FM | ✅ |  |
 | Metro FM | ✅ |  |
-| Slow Türk | ✅ |  |
+| Slow Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Radyo Fenomen | ✅ |  |
 | Alem FM | ✅ |  |
 | TRT FM | ✅ |  |
