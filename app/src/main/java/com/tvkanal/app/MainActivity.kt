@@ -30,6 +30,7 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
 import androidx.media3.ui.PlayerView
@@ -536,7 +537,11 @@ class MainActivity : AppCompatActivity() {
         player?.let { return it }
         // TV'nin ekran çözünürlüğünü algıla: 720p ekrana 1080p, 1080p ekrana 4K yayın
         // gönderip boşuna internet harcama; ekranın kaldırabildiği en iyi kaliteyi seç.
-        val trackSelector = DefaultTrackSelector(this).apply {
+        // Kaliteyi yükseltmeden önce 15 sn iyi hız görsün ve ölçülen hızın %60'ını kullansın:
+        // uzak sunucularda (Bali → Türkiye) hız çok dalgalanıyor, bir iyi parça yüzünden
+        // 1080p'ye zıplayıp takılmasın.
+        val abr = AdaptiveTrackSelection.Factory(15_000, 25_000, 25_000, 0.6f)
+        val trackSelector = DefaultTrackSelector(this, abr).apply {
             setParameters(
                 buildUponParameters()
                     .setViewportSizeToPhysicalDisplaySize(this@MainActivity, true)
@@ -566,7 +571,7 @@ class MainActivity : AppCompatActivity() {
         // Oynatmaya başlamadan önce ve donma sonrası biraz daha fazla görüntü biriktir:
         // kısa internet dalgalanmaları tamponu boşaltıp görüntüyü dondurmasın.
         val loadControl = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(30_000, 60_000, 5_000, 10_000)
+            .setBufferDurationsMs(30_000, 60_000, 5_000, 15_000)
             .build()
         // TV'nin bir görüntü çözücüsü yayını açamazsa diğer çözücüyü dene (eski/ucuz TV'ler için)
         val renderers = DefaultRenderersFactory(this).setEnableDecoderFallback(true)
@@ -638,7 +643,13 @@ class MainActivity : AppCompatActivity() {
                             scheduleReconnect()
                         }
                     }
+                    // Oynarken görüntü durup beklemeye geçtiyse: yayın internete yetişemiyor
+                    if (state == Player.STATE_BUFFERING && streamWasReady && p.playWhenReady && cur != null) {
+                        onStall(cur)
+                    }
                     if (state == Player.STATE_READY) {
+                        streamWasReady = true
+                        scheduleQualityUp()
                         retried = false
                         radioRetries = 0
                         reconnectRetries = 0
@@ -760,8 +771,12 @@ class MainActivity : AppCompatActivity() {
 
         val p = ensurePlayer()
         // Önceki kanalın kalite seçimi yeni kanala taşınmasın
+        streamWasReady = false
+        main.removeCallbacks(qualityUp)
         p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
             .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
+            // Bu kanal yakın zamanda takıldıysa düşürülen kalite sınırıyla başla
+            .setMaxVideoSize(Int.MAX_VALUE, videoCap(ch))
             // Radyoda görüntü yok: internet ne olursa olsun hep en yüksek ses kalitesini çal
             .setForceHighestSupportedBitrate(ch.isRadio)
             .build()
@@ -1109,8 +1124,58 @@ class MainActivity : AppCompatActivity() {
         if (player == null && current >= 0) play(current)
     }
 
+    // ---- Takılma olursa alternatif: kaliteyi bir basamak düşür ----
+    // Yayın internete yetişemeyip takılınca (ör. Bali'den ATV) o kanalın en yüksek
+    // kalitesini bir basamak indir (1080p → 720p → 480p → 360p). Sınır kanal başına
+    // 6 saat hatırlanır; 20 dk takılmadan oynarsa bir basamak geri yükselir.
+
+    private var streamWasReady = false
+    private var lastStall = 0L
+
+    private fun videoCap(ch: Channel): Int {
+        if (ch.isRadio) return Int.MAX_VALUE
+        val since = prefs.getLong("capT_${ch.id}", 0L)
+        if (System.currentTimeMillis() - since > 6 * 3600_000L) return Int.MAX_VALUE
+        return prefs.getInt("cap_${ch.id}", Int.MAX_VALUE)
+    }
+
+    private fun setVideoCap(ch: Channel, cap: Int) {
+        prefs.edit().putInt("cap_${ch.id}", cap).putLong("capT_${ch.id}", System.currentTimeMillis()).apply()
+        val p = player ?: return
+        p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+            .setMaxVideoSize(Int.MAX_VALUE, cap).build()
+    }
+
+    private fun onStall(ch: Channel) {
+        if (ch.isRadio) return
+        main.removeCallbacks(qualityUp)
+        val now = System.currentTimeMillis()
+        // Aynı takılmayı iki kez sayma: düşürmeden sonra yeni kalitenin oturmasını bekle
+        if (now - lastStall < 20_000L) return
+        lastStall = now
+        val playing = player?.videoFormat?.height ?: return
+        val lower = availableHeights.firstOrNull { it < playing } ?: return // zaten en düşükte
+        setVideoCap(ch, lower)
+    }
+
+    private val qualityUp = Runnable {
+        val ch = channels.getOrNull(current) ?: return@Runnable
+        val cap = videoCap(ch)
+        if (cap == Int.MAX_VALUE) return@Runnable
+        val higher = availableHeights.lastOrNull { it > cap }
+        setVideoCap(ch, higher ?: Int.MAX_VALUE)
+        if (higher != null) scheduleQualityUp()
+    }
+
+    private fun scheduleQualityUp() {
+        main.removeCallbacks(qualityUp)
+        val ch = channels.getOrNull(current) ?: return
+        if (videoCap(ch) != Int.MAX_VALUE) main.postDelayed(qualityUp, 20 * 60_000L)
+    }
+
     override fun onStop() {
         super.onStop()
+        main.removeCallbacks(qualityUp)
         player?.release()
         player = null
         playerView.player = null
