@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-09 08:23 UTC · 57/62 kanal erişilebilir
+Son kontrol: 2026-11-09 19:00 UTC · 58/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -26,15 +26,15 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Halk TV | ✅ |  |
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
-| TRT World | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Arabi | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Çocuk | ✅ |  |
+| TRT World | ✅ |  |
+| TRT Arabi | ✅ |  |
+| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
-| TRT Avaz | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
-| TRT 2 | ✅ |  |
-| TRT Genç | ✅ |  |
+| TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
@@ -63,7 +63,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TRT Türkü | ✅ |  |
 | Pal Nostalji | ✅ |  |
 | Radyo 45'lik | ✅ |  |
-| TRT Diyanet Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Diyanet Çocuk | ✅ |  |
 | TRT EBA | ✅ |  |
 | TBMM TV | ✅ |  |
 | TV 4 | ✅ |  |
