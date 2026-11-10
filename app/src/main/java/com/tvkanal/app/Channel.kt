@@ -26,6 +26,8 @@ data class Channel(
     val stayOriginal: Boolean = false,
     /** Listede soldaki sütun: "Alin's" ya da dünya kanallarında ülke adı. */
     val group: String = "Alin's",
+    /** Yedek de açılmazsa sırayla denenecek diğer adresler. */
+    val backups: List<String> = emptyList(),
 ) {
     val isRadio get() = type == "radio"
     val hasFallback get() = fallbackUrl.isNotBlank() || fallbackPage.isNotBlank()

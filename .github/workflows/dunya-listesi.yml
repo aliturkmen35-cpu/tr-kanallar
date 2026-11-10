@@ -1,8 +1,8 @@
-name: Dünya kanalları (iptv-org)
+name: Türkiye ve bölgesel kanallar (iptv-org)
 
 on:
   schedule:
-    - cron: "0 4 * * 1"   # her pazartesi 04:00 UTC
+    - cron: "40 */6 * * *"   # 6 saatte bir: yeni adresler ve yedekler
   workflow_dispatch:
 
 permissions:
@@ -16,17 +16,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: iptv-org listesini al, açılan kanalları süz
-        run: python tools/import_iptv_org.py --check
+      - name: Türkiye listesini al; tür/bölge grupları, yedek adresler
+        run: python tools/import_iptv_org.py --tr --check
       - name: Değişiklikleri kaydet
         run: |
           git config user.name "kanal-botu"
           git config user.email "kanal-botu@users.noreply.github.com"
-          git pull --rebase
-          git add world.json
+          git pull --rebase --autostash
+          git add world.json channels.json
           if git diff --cached --quiet; then
             echo "Değişiklik yok"
           else
-            git commit -m "Dünya kanalları güncellendi (iptv-org)"
+            git commit -m "Türkiye kanalları ve yedek adresler güncellendi (iptv-org)"
             git push
           fi

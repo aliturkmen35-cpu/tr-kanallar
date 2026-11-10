@@ -102,9 +102,13 @@ class ChannelRepository(private val context: Context) {
                 url = url,
                 headers = headers,
                 fallbackUrl = o.optString("fallbackUrl"),
-                group = if (cc == "TR") GROUP_TR else country,
+                // Liste grubu verdiyse (Türkiye listesi: tür ve bölgeler) o kullanılır
+                group = o.optString("group").ifBlank { if (cc == "TR") GROUP_TR else country },
+                backups = backupsOf(o),
             )
         }
+        // Gruplu liste sunucuda sıralanmış gelir (tür grupları, sonra bölgeler): sırayı koru
+        if (arr.length() > 0 && arr.getJSONObject(0).has("group")) return list
         // Önce Türkiye, sonra diğer ülkeler; ülkeler ve kanallar Türkçe alfabe sırasıyla
         val collator = Collator.getInstance(tr)
         return list.sortedWith(compareBy<Channel> { it.group != GROUP_TR }
@@ -114,6 +118,11 @@ class ChannelRepository(private val context: Context) {
 
     companion object {
         const val GROUP_TR = "★ Türkiye"
+
+        private fun backupsOf(o: JSONObject): List<String> {
+            val a = o.optJSONArray("backups") ?: return emptyList()
+            return (0 until a.length()).map { a.optString(it) }.filter { it.isNotBlank() }
+        }
     }
 
     private fun download(url: String, timeoutMs: Int = 8000): String {
@@ -165,6 +174,7 @@ class ChannelRepository(private val context: Context) {
                 pageHeaders = pageHeaders,
                 youtube = o.optString("youtube"),
                 stayOriginal = o.optBoolean("stayOriginal", false),
+                backups = backupsOf(o),
             )
         }
     }

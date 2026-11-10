@@ -100,7 +100,10 @@
       "pattern": "https://kanal7\\.daioncdn\\.net/[^\\\"'<>\\s]+",
       "iptv": "Kanal7.tr",
       "fallbackUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8",
-      "webUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8"
+      "webUrl": "https://kanal7-live.daioncdn.net/kanal7/kanal7.m3u8",
+      "backups": [
+        "https://kanal7.blutv.com/blutv_kanal7_live/live.m3u8"
+      ]
     },
     {
       "id": "teve2",
@@ -197,7 +200,10 @@
       "youtube": "6N8_r2uwLEc",
       "youtubeChannel": "UCV6zcRug6Hqp1UX_FdyUeBg",
       "iptv": "CNNTurk.tr",
-      "webYoutube": true
+      "webYoutube": true,
+      "backups": [
+        "http://85.117.61.84/cnnturk/index.m3u8"
+      ]
     },
     {
       "id": "halktv",
@@ -224,7 +230,10 @@
       "page": "https://videojs.tmgrup.com.tr/getvideo/c0fbbd0d-b4cb-4e5b-b516-9993b9e506c3/00000000-0000-0000-0000-000000000000",
       "pattern": "\\\"VideoUrl\\\":\\\"([^\\\"]+)\\\"",
       "iptv": "AHaber.tr",
-      "fallbackUrl": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8"
+      "fallbackUrl": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8",
+      "backups": [
+        "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/ahaber/ahaber.m3u8"
+      ]
     },
     {
       "id": "tgrthaber",
@@ -245,7 +254,12 @@
       "category": "Haber",
       "url": "https://tv-trtworld.medya.trt.com.tr/master.m3u8",
       "iptv": "TRTWorld.tr",
-      "fallbackUrl": "https://cdn.pishow.tv/ott/live/266/master.m3u8"
+      "fallbackUrl": "https://cdn.pishow.tv/ott/live/266/master.m3u8",
+      "backups": [
+        "https://fta.ektv.in/live/416/master.m3u8",
+        "https://mumbai-edge.smartplaytv.in/TRTWorld/index.m3u8",
+        "https://dash2.antik.sk/live/test_trt_world_atktv/playlist.m3u8"
+      ]
     },
     {
       "id": "trtarabi",
@@ -335,7 +349,11 @@
       "category": "Müzik",
       "url": "https://livetv.powerapp.com.tr/powerturkTV/powerturkhd.smil/playlist.m3u8",
       "iptv": "PowerTurkTV.tr",
-      "fallbackUrl": "https://mn-nl.mncdn.com/blutv_powerturk/smil:powerturk_sd.smil/playlist.m3u8"
+      "fallbackUrl": "https://mn-nl.mncdn.com/blutv_powerturk/smil:powerturk_sd.smil/playlist.m3u8",
+      "backups": [
+        "https://powerturk.blutv.com/blutv_powerturk/powerturk_sd.smil/playlist.m3u8",
+        "https://live.artidijitalmedya.com/artidijital_powerturktv/powerturktv/playlist.m3u8"
+      ]
     },
     {
       "id": "number1",

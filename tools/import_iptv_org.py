@@ -56,6 +56,42 @@ ADULT = re.compile(r"xxx|adult|porn|\+18|18\+|erotic|hustler|playboy|brazzers", 
 BAD_HOSTS = ("mangeinde", "siteyaptim", "tv.vin", "streameast", "crichd", "hesgoal", "totalsportek",
              ".cfd/", "workers.dev", "stmify", "mangora", "iptvperu")
 
+# --tr: yalnızca Türkçe (ve Türkiye'de yayın yapan Kürtçe/Zazaca) kanallar. Türkiye'den yayın yapan
+# Farsça/Arapça/İngilizce kanallar (GEM, Al-..., TRT World) yabancı sayılır.
+TR_LANGS = {"tur", "kmr", "kur", "ckb", "zza", "aze"}
+FOREIGN_NAME = re.compile(r"^(gem\b|al[- ]|almahriah|elsharq|mekameleen|thaqalayn|qaf\b|trt (arabi|world))", re.I)
+# En fazla kaç adres tutulur (ana + yedekler). Uygulama sırayla dener.
+MAX_URLS = 6
+
+# Kanal türü (iptv-org kategorisi) -> uygulamadaki grup; sıra sütundaki sıradır.
+GROUPS = ["Ulusal", "Haber", "Spor", "Çocuk", "Belgesel ve kültür", "Film ve dizi", "Müzik", "Dini"]
+GENRE_GROUP = {
+    "news": "Haber", "business": "Haber", "weather": "Haber", "legislative": "Haber",
+    "sports": "Spor", "kids": "Çocuk", "animation": "Çocuk",
+    "documentary": "Belgesel ve kültür", "culture": "Belgesel ve kültür", "education": "Belgesel ve kültür",
+    "science": "Belgesel ve kültür", "travel": "Belgesel ve kültür", "outdoor": "Belgesel ve kültür",
+    "movies": "Film ve dizi", "series": "Film ve dizi", "classic": "Film ve dizi", "comedy": "Film ve dizi",
+    "music": "Müzik", "religious": "Dini",
+}
+REGIONS = {
+    "Marmara": "İstanbul Edirne Kırklareli Tekirdağ Kocaeli Sakarya Yalova Bursa Bilecik Balıkesir Çanakkale",
+    "Ege": "İzmir Manisa Aydın Muğla Denizli Uşak Kütahya Afyonkarahisar",
+    "Akdeniz": "Antalya Isparta Burdur Mersin Adana Hatay Osmaniye Kahramanmaraş",
+    "İç Anadolu": "Ankara Konya Kayseri Eskişehir Sivas Yozgat Kırşehir Nevşehir Niğde Aksaray Karaman Kırıkkale Çankırı",
+    "Karadeniz": "Samsun Trabzon Ordu Giresun Rize Artvin Gümüşhane Bayburt Tokat Amasya Çorum Sinop Kastamonu Bartın Karabük Zonguldak Bolu Düzce",
+    "Doğu Anadolu": "Erzurum Erzincan Kars Ardahan Iğdır Ağrı Van Muş Bitlis Hakkari Malatya Elazığ Tunceli Bingöl",
+    "Güneydoğu Anadolu": "Gaziantep Şanlıurfa Diyarbakır Mardin Batman Siirt Şırnak Adıyaman Kilis",
+}
+REGION_OF = {il: r for r, ils in REGIONS.items() for il in ils.split()}
+# Türü boş kanallar için addan grup
+NAME_GROUP = [
+    (r"spor|tjk", "Spor"), (r"haber|news|tele ?1|tvnet|ülke|ulke", "Haber"),
+    (r"belgesel|eba|natural|nature", "Belgesel ve kültür"),
+    (r"çocuk|cocuk|zarok|minika|kids", "Çocuk"),
+    (r"semerkand|diyanet|lalegül|lalegul|dost tv|ilke tv", "Dini"),
+    (r"müzik|muzik|power|number ?1|kral|dream", "Müzik"), (r"cinema|film|sinema", "Film ve dizi"),
+]
+
 
 def fetch(url, timeout=60):
     req = urllib.request.Request(url, headers={"User-Agent": "alins-tv-importer"})
@@ -151,6 +187,7 @@ def main():
     have_urls = {c.get("url") for c in ours["channels"]} | {c.get("fallbackUrl") for c in ours["channels"]}
 
     out, seen = {}, set(have_urls)
+    curated_alts = {}
     skipped = {"blok": 0, "paralı": 0, "mevcut": 0, "kapalı": 0}
 
     def bad(title, url):
@@ -182,7 +219,13 @@ def main():
             skipped["kapalı"] += 1; continue
         if "--tr" in sys.argv and ch["country"] != "TR" and (cid, s["feed"] or main_feed.get(cid)) not in turkish:
             continue
+        if "--tr" in sys.argv:
+            f = feeds.get((cid, s["feed"] or main_feed.get(cid)))
+            if FOREIGN_NAME.search(ch["name"]) or (f and f["languages"] and not TR_LANGS & set(f["languages"])):
+                continue
         if cid in have:
+            # Alin's kanalı: bu akış o kanala sıradaki yedek olur
+            curated_alts.setdefault(cid, []).append(url)
             skipped["mevcut"] += 1; continue
         if bad(ch["name"], url) or PAID.search(s.get("title") or ""):
             skipped["paralı"] += 1; continue
@@ -274,6 +317,8 @@ def main():
                 if url not in (c.get("url"), c.get("fallbackUrl")) and not c.get("fallbackUrl") and not c.get("stayOriginal"):
                     c["fallbackUrl"] = url
                     curated_fb += 1
+                else:
+                    curated_alts.setdefault(cid, []).append(url)
                 continue
             if url in seen:
                 continue
@@ -293,37 +338,99 @@ def main():
             if cid:
                 by_cid[cid] = item
             local += 1
-        if curated_fb:
-            (ROOT / "channels.json").write_text(json.dumps(ours, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Türkiye listesi: {local} yeni kanal, {extra_fb} dünya + {curated_fb} Alin's kanalına yedek adres",
           file=sys.stderr)
 
     check = "--check" in sys.argv
 
+    # Alin's kanallarına sıradaki yedekler (channels.json "backups"): iptv-org ve kullanıcının
+    # listesindeki diğer resmi adresler. Kendi yayınından vazgeçmeyen kanallara (stayOriginal) dokunulmaz.
+    curated_bk = 0
+    by_iptv = {c.get("iptv", "").split("@")[0]: c for c in ours["channels"] if c.get("iptv")}
+    for cid, urls in curated_alts.items():
+        c = by_iptv.get(cid)
+        if not c or c.get("stayOriginal") or c.get("type") == "radio":
+            continue
+        cur = {c.get("url"), c.get("fallbackUrl")} | set(c.get("backups") or [])
+        add = [u for u in dict.fromkeys(urls) if u not in cur and not any(h in u for h in BAD_HOSTS)]
+        if check:
+            add = [u for u in add if host_exists(u)]
+        merged = (list(c.get("backups") or []) + add)[: MAX_URLS - 2]
+        if merged and merged != c.get("backups"):
+            c["backups"] = merged
+            curated_bk += 1
+    if curated_fb or curated_bk:
+        (ROOT / "channels.json").write_text(json.dumps(ours, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"Alin's kanallarına sıradaki yedek: {curated_bk} kanal", file=sys.stderr)
+
     def settle(c):
-        """Kanalın tüm akışlarından alan adı var olan ilk ikisini ana adres + yedek yapar."""
+        """Kanalın alan adı var olan akışları: ilki ana adres, ikincisi yedek, kalanı sıradaki yedekler.
+        Uygulama açılmayan adresten bir sonrakine geçer."""
         alts = [(c["url"], c.get("headers") or {})]
         if c.get("fallbackUrl"):
             alts.append((c["fallbackUrl"], {}))
         alts += c.pop("_alts", [])
-        live = [a for a in alts if host_exists(a[0])] if check else alts
+        uniq, seen_u = [], set()
+        for a in alts:
+            if a[0] not in seen_u:
+                seen_u.add(a[0]); uniq.append(a)
+        live = [a for a in uniq if host_exists(a[0])] if check else uniq
         if not live:
             return False
+        live = live[:MAX_URLS]
         c["url"], h = live[0]
         c.pop("headers", None)
         if h:
             c["headers"] = h
         c.pop("fallbackUrl", None)
+        c.pop("backups", None)
         if len(live) > 1:
             c["fallbackUrl"] = live[1][0]
+        if len(live) > 2:
+            c["backups"] = [a[0] for a in live[2:]]
         return True
+
+    regional = {}
+    rp = ROOT / "sources" / "tr_bolgesel.json"
+    if rp.exists():
+        regional = {k: v for k, v in json.loads(rp.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+
+    def classify(c):
+        """Türkiye listesinde soldaki sütunun grubu: yerel kanal bölgesi ya da kanal türü."""
+        cid = c["id"].split(":")[-1].split("@")[0].removesuffix(".tr")
+        il = regional.get(cid)
+        if il:
+            region = il[1:] if il.startswith("@") else REGION_OF.get(il, "")
+            if not il.startswith("@") and il.lower() not in c["name"].lower():
+                c["name"] = f"{c['name']} ({il})"
+            c["group"] = f"Bölgesel · {region}" if region else "Bölgesel"
+        else:
+            g = GENRE_GROUP.get(c.get("genre", ""))
+            if not g:  # türü belirsiz: adından
+                n = c["name"].lower()
+                g = next((grp for rx, grp in NAME_GROUP if re.search(rx, n)), "Ulusal")
+            c["group"] = g
+
+    def group_order(g):
+        if g in GROUPS:
+            return GROUPS.index(g)
+        if g.startswith("Bölgesel"):
+            return 100
+        return 200
 
     cands = list(out.values())
     with ThreadPoolExecutor(64) as ex:
         ok = list(ex.map(settle, cands))
     if check:
         skipped["alan adı yok"] = ok.count(False)
-    items = sorted((c for c, k in zip(cands, ok) if k), key=lambda c: (c["country"], c["name"].lower()))
+    if "--tr" in sys.argv:
+        # Yalnızca Türkiye kanalları (yurt dışındaki Türkçe yayınlar da dışarıda)
+        kept = [c for c, k in zip(cands, ok) if k and c["country"] == "TR" and not FOREIGN_NAME.search(c["name"])]
+        for c in kept:
+            classify(c)
+        items = sorted(kept, key=lambda c: (group_order(c["group"]), c["group"], c["name"].lower()))
+    else:
+        items = sorted((c for c, k in zip(cands, ok) if k), key=lambda c: (c["country"], c["name"].lower()))
     data = {
         "source": "iptv-org/api + iptv-org/iptv (streams) + Free-TV/IPTV",
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),

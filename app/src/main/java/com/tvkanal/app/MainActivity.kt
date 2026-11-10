@@ -376,7 +376,7 @@ class MainActivity : AppCompatActivity() {
         val world = prefs.getBoolean("showWorld", true)
         val items = arrayOf(
             "TV açılınca Alin's açılsın: " + if (auto) "AÇIK" else "KAPALI",
-            "Dünya kanalları: " + if (world) "GÖSTER" else "GİZLE",
+            "Türkiye ve bölgesel kanallar: " + if (world) "GÖSTER" else "GİZLE",
             "Kanalları TV'nin kanal listesine ve ana ekrana ekle",
             "Uygulamalar listesinde simge: " + if (launcherVisible()) "GÖRÜNÜR" else "GİZLİ (yalnızca TV kanalı)",
             "Alin's sürüm ${BuildConfig.VERSION_NAME}",
@@ -615,6 +615,11 @@ class MainActivity : AppCompatActivity() {
                         usedFallback = true
                         useAlt = true
                         play(current, keepRetryFlag = true)
+                    } else if (ch != null && backupIdx + 1 < ch.backups.size) {
+                        // Yedek de açılmadı: listedeki sıradaki adresi dene
+                        backupIdx++
+                        useAlt = false
+                        play(current, keepRetryFlag = true)
                     } else if (ch != null && ch.youtube.isNotBlank() && !usedYouTube) {
                         // Son yedek: kanalın resmi YouTube canlı yayını
                         usedYouTube = true
@@ -668,7 +673,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun play(index: Int, keepRetryFlag: Boolean = false, fromReconnect: Boolean = false) {
         val ch = channels.getOrNull(index) ?: return
-        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0; useAlt = false }
+        if (!keepRetryFlag) { retried = false; usedFallback = false; usedYouTube = false; radioRetries = 0; useAlt = false; backupIdx = -1 }
         // Kullanıcı kanalı kendi değiştirdiyse yeniden-bağlanma sayacını sıfırla
         // (otomatik yeniden bağlanmada sayaç korunur ki aralık giderek açılsın).
         if (!keepRetryFlag && !fromReconnect) reconnectRetries = 0
@@ -704,7 +709,10 @@ class MainActivity : AppCompatActivity() {
         val userAgent = ch.headers.entries.firstOrNull { it.key.equals("User-Agent", true) }?.value
             ?: if (ch.isRadio) RADIO_UA else DEFAULT_UA
 
-        if (useAlt && ch.hasFallback) {
+        if (backupIdx in ch.backups.indices) {
+            // Sıradaki yedek adres (liste botu yaşayan adresleri sıralar)
+            startStream(ch, ch.backups[backupIdx], userAgent)
+        } else if (useAlt && ch.hasFallback) {
             // Yedek kaynak: adresi (gerekirse kanalın token servisinden) o an oku
             player?.stop()
             io.execute {
@@ -750,6 +758,8 @@ class MainActivity : AppCompatActivity() {
     private var playToken = 0
     private var usedFallback = false
     private var useAlt = false
+    /** Denenen yedek adresin sırası (Channel.backups); -1 = henüz yok. */
+    private var backupIdx = -1
     private var reconnectRetries = 0
     private var usedYouTube = false
     private var radioRetries = 0
