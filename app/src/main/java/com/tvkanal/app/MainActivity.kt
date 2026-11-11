@@ -30,6 +30,9 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
+import androidx.media3.datasource.HttpDataSource
 import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.exoplayer.upstream.DefaultBandwidthMeter
@@ -595,7 +598,7 @@ class MainActivity : AppCompatActivity() {
                     val ch = channels.getOrNull(current)
                     // Radyo ve kendi yayınından vazgeçmeyen kanallar (ör. ATV):
                     // bağlantı koparsa yedeğe/YouTube'a geçmeden yeniden bağlan
-                    if (ch != null && (ch.isRadio || ch.stayOriginal) && current >= 0) {
+                    if (ch != null && (ch.isRadio || (ch.stayOriginal && radioRetries < 3)) && current >= 0) {
                         radioRetries++
                         // Aynı kanalın ikinci resmi kaynağı varsa (ör. ATV'nin kendi sitesindeki yayın)
                         // kopan kaynaktan diğerine geç; ikisi arasında gidip gel
@@ -610,29 +613,8 @@ class MainActivity : AppCompatActivity() {
                     if (!retried && current >= 0) {
                         retried = true
                         main.postDelayed({ play(current, keepRetryFlag = true) }, 1500)
-                    } else if (ch != null && ch.hasFallback && !usedFallback) {
-                        // Ana yayın açılmadı: yedek yayını dene
-                        usedFallback = true
-                        useAlt = true
-                        play(current, keepRetryFlag = true)
-                    } else if (ch != null && backupIdx + 1 < ch.backups.size) {
-                        // Yedek de açılmadı: listedeki sıradaki adresi dene
-                        backupIdx++
-                        useAlt = false
-                        play(current, keepRetryFlag = true)
-                    } else if (ch != null && ch.youtube.isNotBlank() && !usedYouTube) {
-                        // Son yedek: kanalın resmi YouTube canlı yayını
-                        usedYouTube = true
-                        // Sonraki açılışlarda 6 saat boyunca doğrudan YouTube'dan başla
-                        prefs.edit().putLong("yt_${ch.id}", System.currentTimeMillis()).apply()
-                        player?.stop()
-                        watermark.visibility = View.GONE // YouTube oynatıcısının üstüne logo koymuyoruz
-                        youTube.play(ch.youtube)
-                    } else {
-                        // Ana yayın, yedek ve YouTube de gelmedi: pes etme.
-                        // Kısa aralıklarla en iyi kaynaktan yeniden bağlanmayı sürdür;
-                        // internet düzelince kanal kendiliğinden geri gelir.
-                        scheduleReconnect()
+                    } else if (ch != null) {
+                        advanceSource(ch, fromStall = false)
                     }
                 }
 
@@ -651,8 +633,11 @@ class MainActivity : AppCompatActivity() {
                     // Oynarken görüntü durup beklemeye geçtiyse: yayın internete yetişemiyor
                     if (state == Player.STATE_BUFFERING && streamWasReady && p.playWhenReady && cur != null) {
                         onStall(cur)
+                        watchStall(cur)
                     }
                     if (state == Player.STATE_READY) {
+                        main.removeCallbacks(stallWatch)
+                        main.removeCallbacks(openWatch)
                         streamWasReady = true
                         scheduleQualityUp()
                         retried = false
@@ -796,10 +781,101 @@ class MainActivity : AppCompatActivity() {
         playerView.visibility = if (ch.isRadio) View.GONE else View.VISIBLE
         updateRadioBackground(ch.isRadio)
         radioName.text = ch.name
-        val source = DefaultMediaSourceFactory(http).createMediaSource(MediaItem.fromUri(url))
+        val source = DefaultMediaSourceFactory(http)
+            .setLoadErrorHandlingPolicy(SkipBrokenQuality)
+            .createMediaSource(MediaItem.fromUri(url))
         p.setMediaSource(source)
         p.prepare()
         p.playWhenReady = true
+        // Açılmayan yayında sonsuza dek bekleme: belli sürede görüntü gelmezse sıradakine geç
+        stallTimes.clear()
+        main.removeCallbacks(stallWatch)
+        main.removeCallbacks(openWatch)
+        if (!ch.isRadio) main.postDelayed(openWatch, OPEN_TIMEOUT_MS)
+    }
+
+    // ---- Açılmazsa / takılırsa doğrudan geçiş ----
+    // Sıra: ana yayın → yedek yayın → listedeki diğer adresler → kanalın resmi YouTube canlı yayını.
+
+    private fun advanceSource(ch: Channel, fromStall: Boolean) {
+        main.removeCallbacks(stallWatch)
+        main.removeCallbacks(openWatch)
+        retried = true
+        if (ch.hasFallback && !usedFallback) {
+            usedFallback = true
+            useAlt = true
+            play(current, keepRetryFlag = true)
+        } else if (backupIdx + 1 < ch.backups.size) {
+            backupIdx++
+            useAlt = false
+            play(current, keepRetryFlag = true)
+        } else if (ch.youtube.isNotBlank() && !usedYouTube) {
+            usedYouTube = true
+            // Sonraki açılışlarda 6 saat boyunca doğrudan YouTube'dan başla
+            prefs.edit().putLong("yt_${ch.id}", System.currentTimeMillis()).apply()
+            player?.stop()
+            watermark.visibility = View.GONE // YouTube oynatıcısının üstüne logo koymuyoruz
+            youTube.play(ch.youtube)
+        } else if (!fromStall) {
+            // Hiçbiri gelmedi: pes etme, internet düzelince kanal kendiliğinden geri gelir
+            scheduleReconnect()
+        }
+        // Takılmada başka kaynak kalmadıysa eldekiyle devam (kalite zaten düşürülüyor)
+    }
+
+    private val stallTimes = ArrayDeque<Long>()
+
+    private fun watchStall(ch: Channel) {
+        if (ch.isRadio || usedYouTube) return
+        val now = System.currentTimeMillis()
+        stallTimes.addLast(now)
+        while (stallTimes.isNotEmpty() && now - stallTimes.first() > STALL_WINDOW_MS) stallTimes.removeFirst()
+        if (stallTimes.size >= STALL_COUNT) {
+            stallTimes.clear()
+            advanceSource(ch, fromStall = true)
+            return
+        }
+        main.removeCallbacks(stallWatch)
+        main.postDelayed(stallWatch, STALL_TIMEOUT_MS)
+    }
+
+    /** Görüntü uzun süre donuk kaldı: sıradaki kaynağa geç. */
+    private val stallWatch = Runnable {
+        val ch = channels.getOrNull(current) ?: return@Runnable
+        if (player?.playbackState == Player.STATE_BUFFERING && !usedYouTube) advanceSource(ch, fromStall = true)
+    }
+
+    /** Kanal belli sürede açılmadı: sıradaki kaynağa geç. */
+    private val openWatch = Runnable {
+        val ch = channels.getOrNull(current) ?: return@Runnable
+        if (!streamWasReady && !usedYouTube && player?.playbackState != Player.STATE_READY) advanceSource(ch, fromStall = true)
+    }
+
+    /**
+     * Bir kalitenin listesi/parçaları bozuksa (ör. 502, zaman aşımı) o kaliteyi bir süre atla,
+     * çalışan diğer kaliteyle oynat. Varsayılan kural 502 ve zaman aşımında aynı bozuk adresi
+     * tekrar tekrar deneyip görüntüyü donduruyordu.
+     */
+    private object SkipBrokenQuality : DefaultLoadErrorHandlingPolicy() {
+        override fun getFallbackSelectionFor(
+            options: LoadErrorHandlingPolicy.FallbackOptions,
+            info: LoadErrorHandlingPolicy.LoadErrorInfo,
+        ): LoadErrorHandlingPolicy.FallbackSelection? {
+            val broken = when (val e = info.exception) {
+                is HttpDataSource.InvalidResponseCodeException ->
+                    e.responseCode >= 500 || e.responseCode in setOf(401, 403, 404, 410, 416)
+                is HttpDataSource.HttpDataSourceException -> true // zaman aşımı / bağlantı koptu
+                else -> false
+            }
+            if (!broken) return null
+            return when {
+                options.isFallbackAvailable(LoadErrorHandlingPolicy.FALLBACK_TYPE_TRACK) ->
+                    LoadErrorHandlingPolicy.FallbackSelection(LoadErrorHandlingPolicy.FALLBACK_TYPE_TRACK, 60_000L)
+                options.isFallbackAvailable(LoadErrorHandlingPolicy.FALLBACK_TYPE_LOCATION) ->
+                    LoadErrorHandlingPolicy.FallbackSelection(LoadErrorHandlingPolicy.FALLBACK_TYPE_LOCATION, 5 * 60_000L)
+                else -> null
+            }
+        }
     }
 
     companion object {
@@ -808,6 +884,10 @@ class MainActivity : AppCompatActivity() {
         private const val RADIO_UA = "AlinsTV/${BuildConfig.VERSION_NAME} (Linux; Android TV) ExoPlayerLib/1.3.1"
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
+        private const val OPEN_TIMEOUT_MS = 15_000L   // bu sürede açılmazsa sıradaki kaynak
+        private const val STALL_TIMEOUT_MS = 8_000L   // bundan uzun donarsa sıradaki kaynak
+        private const val STALL_WINDOW_MS = 120_000L  // bu süre içinde…
+        private const val STALL_COUNT = 3             // …bu kadar takılırsa sıradaki kaynak
         private const val AUDIO_TIER_LOW = 0
         private const val AUDIO_TIER_MID = 1
         private const val AUDIO_TIER_HIGH = 2
@@ -1186,6 +1266,8 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         main.removeCallbacks(qualityUp)
+        main.removeCallbacks(stallWatch)
+        main.removeCallbacks(openWatch)
         player?.release()
         player = null
         playerView.player = null

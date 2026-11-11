@@ -14,13 +14,14 @@
       "name": "ATV",
       "category": "Ulusal",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv.m3u8",
-      "stayOriginal": true,
       "iptv": "ATV.tr",
       "fallbackPage": "https://securevideotoken.tmgrup.com.tr/webtv/secure?url=https%3A%2F%2Ftrkvz.daioncdn.net%2Fatv%2Fatv.m3u8%3Fce%3D3%26app%3Dd1ce2d40-5256-4550-b02e-e73c185a314e",
       "fallbackPattern": "\"Url\":\"(https://[^\"]+)\"",
       "pageHeaders": {
         "Referer": "https://www.atv.com.tr/"
-      }
+      },
+      "youtube": "s62-b2AkWmw",
+      "youtubeChannel": "UCUVZ7T_kwkxDOGFcDlFI-hg"
     },
     {
       "id": "showtv",
@@ -72,7 +73,9 @@
       "name": "NOW",
       "category": "Ulusal",
       "url": "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8",
-      "iptv": "NOWTV.tr"
+      "iptv": "NOWTV.tr",
+      "youtube": "--HNcSaI5Gs",
+      "youtubeChannel": "UCJe13zu6MyE6Oueac41KAqg"
     },
     {
       "id": "tv8",
@@ -154,7 +157,9 @@
       "name": "TRT Haber",
       "category": "Haber",
       "url": "https://tv-trthaber.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTHaber.tr"
+      "iptv": "TRTHaber.tr",
+      "youtube": "SiB4y9mXhHI",
+      "youtubeChannel": "UCBgTP2LOFVPmq15W-RH-WXA"
     },
     {
       "id": "haberturk",
@@ -168,7 +173,9 @@
       "pattern": "https://ciner\\.daioncdn\\.net/haberturktv/[^\\\"'<>\\s]+",
       "iptv": "HaberturkTV.tr",
       "web": false,
-      "fallbackUrl": "https://tv.ensonhaber.com/haberturk/haberturk.m3u8"
+      "fallbackUrl": "https://tv.ensonhaber.com/haberturk/haberturk.m3u8",
+      "youtube": "1r-TDzlI3mA",
+      "youtubeChannel": "UCn6dNfiRE_Xunu7iMyvD7AA"
     },
     {
       "id": "ntv",
@@ -233,7 +240,9 @@
       "fallbackUrl": "https://trkvz-live.ercdn.net/ahaberhd/ahaberhd.m3u8",
       "backups": [
         "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/ahaber/ahaber.m3u8"
-      ]
+      ],
+      "youtube": "7sQ0EWD99Fw",
+      "youtubeChannel": "UCKQhfw-lzz0uKnE1fY1PsAA"
     },
     {
       "id": "tgrthaber",
@@ -246,7 +255,9 @@
       "page": "https://www.tgrthaber.com/canli-yayin",
       "pattern": "https://canli\\.tgrthaber\\.com/[^\\\"'<>\\s]+\\.m3u8",
       "iptv": "TGRTHaber.tr",
-      "fallbackUrl": "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe4598be8e5d.smil/playlist.m3u8"
+      "fallbackUrl": "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe4598be8e5d.smil/playlist.m3u8",
+      "youtube": "MUmXnWIOkN8",
+      "youtubeChannel": "UCzgrZ-CndOoylh2_e72nSBQ"
     },
     {
       "id": "trtworld",
@@ -259,21 +270,27 @@
         "https://fta.ektv.in/live/416/master.m3u8",
         "https://mumbai-edge.smartplaytv.in/TRTWorld/index.m3u8",
         "https://dash2.antik.sk/live/test_trt_world_atktv/playlist.m3u8"
-      ]
+      ],
+      "youtube": "JV5w1MhzcfQ",
+      "youtubeChannel": "UC7fWeaHhqgM4Ry-RMpM2YYw"
     },
     {
       "id": "trtarabi",
       "name": "TRT Arabi",
       "category": "Haber",
       "url": "https://tv-trtarabi.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTArabi.tr"
+      "iptv": "TRTArabi.tr",
+      "youtube": "sat-YpJQ-fg",
+      "youtubeChannel": "UC5GvVahlgulCyo4cshSmbcg"
     },
     {
       "id": "trtcocuk",
       "name": "TRT Çocuk",
       "category": "Çocuk",
       "url": "https://tv-trtcocuk.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTCocuk.tr"
+      "iptv": "TRTCocuk.tr",
+      "youtube": "0LF_8v329dk",
+      "youtubeChannel": "UCrFf5dtMe6M1XJHqbKJ4X6Q"
     },
     {
       "id": "trtmuzik",
@@ -295,7 +312,9 @@
       "name": "TRT Avaz",
       "category": "Diğer",
       "url": "https://tv-trtavaz.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTAvaz.tr"
+      "iptv": "TRTAvaz.tr",
+      "youtube": "b_EOXIGlAf8",
+      "youtubeChannel": "UCib1E6oJRLd2pXkxqzxyg7A"
     },
     {
       "id": "trtkurdi",
@@ -368,7 +387,9 @@
       "name": "CNBC-e",
       "category": "Haber",
       "url": "https://hnpsechtsc.turknet.ercdn.net/xpnvudnlsv/cnbc-e/cnbc-e.m3u8",
-      "iptv": "CNBCe.tr"
+      "iptv": "CNBCe.tr",
+      "youtube": "aZ3ycSbSYBA",
+      "youtubeChannel": "UCaO-M1dXacMwtyg0Pvovk4w"
     },
     {
       "id": "tv24",
@@ -402,14 +423,18 @@
       "category": "Çocuk",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago/minikago.m3u8",
       "iptv": "MinikaGo.tr",
-      "fallbackUrl": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago/minikago.m3u8"
+      "fallbackUrl": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/minikago/minikago.m3u8",
+      "youtube": "bx6EuMWYtPU",
+      "youtubeChannel": "UC9X88P0O8YaX1nWwIFPoamw"
     },
     {
       "id": "diyanet",
       "name": "Diyanet TV",
       "category": "Diğer",
       "url": "https://eustr73.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3bf95a47e07.smil/playlist.m3u8",
-      "iptv": "DiyanetTV.tr"
+      "iptv": "DiyanetTV.tr",
+      "youtube": "8KOE6__ogN8",
+      "youtubeChannel": "UC3d1AdmvAP6Jq16-WpD086g"
     },
     {
       "id": "r-powerturk",
@@ -571,7 +596,9 @@
       "name": "A Spor",
       "category": "Spor",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/aspor/aspor.m3u8",
-      "iptv": "ASpor.tr"
+      "iptv": "ASpor.tr",
+      "youtube": "nol9os2B8zE",
+      "youtubeChannel": "UCJElRTCNEmLemgirqvsW63Q"
     },
     {
       "id": "tjktv",
