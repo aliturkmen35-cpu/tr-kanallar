@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-15 01:11 UTC · 57/62 kanal erişilebilir
+Son kontrol: 2026-11-15 08:09 UTC · 54/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -26,15 +26,15 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Halk TV | ✅ |  |
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
-| TRT World | ✅ |  |
-| TRT Arabi | ✅ |  |
+| TRT World | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Arabi | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Çocuk | ✅ |  |
-| TRT Müzik | ✅ |  |
+| TRT Müzik | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Genç | ✅ |  |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
 | Dream Türk | ✅ |  |
@@ -55,7 +55,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Radyo 7 | ✅ |  |
 | Süper FM | ✅ |  |
 | Metro FM | ✅ |  |
-| Slow Türk | ✅ |  |
+| Slow Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Radyo Fenomen | ✅ |  |
 | Alem FM | ✅ |  |
 | TRT FM | ✅ |  |
