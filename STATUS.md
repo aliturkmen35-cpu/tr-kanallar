@@ -1,6 +1,6 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-16 00:43 UTC · 54/62 kanal erişilebilir
+Son kontrol: 2026-11-16 07:37 UTC · 56/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
@@ -19,7 +19,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | National Geographic | ✅ | resmi YouTube canlı yayını |
 | Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Haber | ✅ |  |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
@@ -27,16 +27,16 @@ bir kanal Türkiye'den açılıyor olabilir.
 | A Haber | ✅ |  |
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
-| TRT Arabi | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Çocuk | ✅ |  |
+| TRT Arabi | ✅ |  |
+| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
-| TRT Kurdî | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Kurdî | ✅ |  |
 | TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Genç | ✅ |  |
 | A2 | ✅ |  |
-| Euro D | ✅ |  |
+| Euro D | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Dream Türk | ✅ |  |
 | Power Türk TV | ✅ |  |
 | Number 1 TV | ✅ |  |
