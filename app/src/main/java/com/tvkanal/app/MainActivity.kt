@@ -195,6 +195,37 @@ class MainActivity : AppCompatActivity() {
         play(start)
         loadWorld(lastId)
         loadEpg()
+        listsLoadedAt = System.currentTimeMillis()
+        main.removeCallbacks(listRefresh)
+        main.postDelayed(listRefresh, LIST_REFRESH_MS)
+    }
+
+    /**
+     * Açık kalan TV'de liste eskimesin: kanal listeleri 3 saatte bir ve ekrana dönüşte
+     * sessizce yeniden indirilir. Değişiklik varsa liste yerinde yenilenir; oynayan kanal sürer.
+     */
+    private var listsLoadedAt = 0L
+    private val listRefresh = Runnable { refreshLists() }
+    private fun refreshLists() {
+        main.removeCallbacks(listRefresh)
+        main.postDelayed(listRefresh, LIST_REFRESH_MS)
+        if (baseCurated.isEmpty()) return // ilk yükleme bitmedi
+        listsLoadedAt = System.currentTimeMillis()
+        io.execute {
+            val repo = ChannelRepository(this)
+            val curated = runCatching { repo.load() }.getOrNull()
+            val world = runCatching { repo.loadWorld() }.getOrDefault(emptyList())
+            main.post {
+                if (isFinishing || isDestroyed) return@post
+                var changed = false
+                if (curated != null && curated.source == ChannelRepository.Source.REMOTE &&
+                    curated.channels.isNotEmpty() && curated.channels != baseCurated) {
+                    baseCurated = curated.channels; changed = true
+                }
+                if (world.isNotEmpty() && world != baseWorld) { baseWorld = world; changed = true }
+                if (changed) rebuild()
+            }
+        }
     }
 
     /** Dünya kanallarını (iptv-org) arka planda yükleyip Alin's listesinin arkasına ekler. */
@@ -884,7 +915,8 @@ class MainActivity : AppCompatActivity() {
         private const val RADIO_UA = "AlinsTV/${BuildConfig.VERSION_NAME} (Linux; Android TV) ExoPlayerLib/1.3.1"
         private const val DESKTOP_UA =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Safari/537.36"
-        private const val OPEN_TIMEOUT_MS = 15_000L   // bu sürede açılmazsa sıradaki kaynak
+        private const val LIST_REFRESH_MS = 3 * 3600_000L // kanal listeleri bu aralıkla yeniden indirilir
+        private const val OPEN_TIMEOUT_MS = 15_000L  // bu sürede açılmazsa sıradaki kaynak
         private const val STALL_TIMEOUT_MS = 8_000L   // bundan uzun donarsa sıradaki kaynak
         private const val STALL_WINDOW_MS = 120_000L  // bu süre içinde…
         private const val STALL_COUNT = 3             // …bu kadar takılırsa sıradaki kaynak
@@ -1212,6 +1244,8 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         if (player == null && current >= 0) play(current)
+        // TV uykudan dönünce: liste yarım saatten eskiyse yenile
+        if (baseCurated.isNotEmpty() && System.currentTimeMillis() - listsLoadedAt > 30 * 60_000L) refreshLists()
     }
 
     // ---- Takılma olursa alternatif: kaliteyi bir basamak düşür ----
