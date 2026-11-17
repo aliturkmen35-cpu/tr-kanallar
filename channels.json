@@ -335,7 +335,9 @@
       "name": "TRT 2",
       "category": "Ulusal",
       "url": "https://tv-trt2.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRT2.tr"
+      "iptv": "TRT2.tr",
+      "youtube": "IGGDdIY6ZFQ",
+      "youtubeChannel": "UC2r8FIjCvkYbcbxVe5koa_g"
     },
     {
       "id": "trtgenc",
