@@ -121,6 +121,32 @@ def update_youtube(ch):
     return False
 
 
+def update_youtube_uploads(ch, min_seconds=600, look=10):
+    """7/24 canlı yayını olmayan kanal (ör. TV8): resmi YouTube kanalına yüklenen en yeni
+    uzun videoyu (bölüm) yedek yapar. Gömülmeye izin vermeyen ve kısa videolar atlanır.
+    Değişiklik yaptıysa True döner."""
+    try:
+        _, feed = fetch(f"https://www.youtube.com/feeds/videos.xml?channel_id={ch['youtubeChannel']}")
+    except Exception as e:
+        print(f"  YouTube akışı okunamadı: {e}")
+        return False
+    for vid in re.findall(r"<yt:videoId>([\w-]{11})</yt:videoId>", feed)[:look]:
+        try:
+            _, page = fetch(f"https://www.youtube.com/watch?v={vid}")
+        except Exception:
+            continue
+        m = re.search(r'"lengthSeconds":"(\d+)"', page)
+        if (not m or int(m.group(1)) < min_seconds or '"playableInEmbed":true' not in page
+                or '"status":"OK"' not in page or '"isLive":true' in page or '"isUpcoming":true' in page):
+            continue
+        if vid != ch.get("youtube"):
+            print(f"  YouTube yedeği: en yeni bölüm {vid} ({int(m.group(1)) // 60} dk)")
+            ch["youtube"] = vid
+            return True
+        return False
+    return False
+
+
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else "channels.json"
     status_path = sys.argv[2] if len(sys.argv) > 2 else "STATUS.md"
@@ -132,7 +158,8 @@ def main():
     for ch in data["channels"]:
         name, headers, old = ch["name"], ch.get("headers", {}), ch.get("url", "")
         print(f"- {name}")
-        if ch.get("youtubeChannel") and update_youtube(ch):
+        if ch.get("youtubeChannel") and (
+                update_youtube_uploads(ch) if ch.get("youtubeUploads") else update_youtube(ch)):
             changed = True
         if not ch.get("url") and not ch.get("page"):
             # Yalnızca resmi YouTube canlı yayını olan kanal
