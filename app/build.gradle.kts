@@ -20,8 +20,8 @@ android {
         minSdk = 21 // Android 5.0 ve üstü bütün TV'ler
         targetSdk = 34
         // -Pvc=<sayı>: yalnızca güncelleme denemesi için eski numaralı deneme derlemesi
-        versionCode = (project.findProperty("vc") as String?)?.toInt() ?: 36
-        versionName = "3.25"
+        versionCode = (project.findProperty("vc") as String?)?.toInt() ?: 37
+        versionName = "3.26"
         // Kanal listesinin sunucudaki adresi
         buildConfigField(
             "String", "CHANNELS_URL",

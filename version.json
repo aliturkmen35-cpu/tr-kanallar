@@ -1,8 +1,8 @@
 {
-  "versionCode": 36,
-  "versionName": "3.25",
-  "url": "https://github.com/aliturkmen35-cpu/tr-kanallar/releases/download/v3.25/Alins-TV-3.25.apk",
-  "sha256": "400b132e4b2292e2233f9c8ea5491fefd0aa7a987bae9dc1489d7c86f50c3d9a",
+  "versionCode": 37,
+  "versionName": "3.26",
+  "url": "https://github.com/aliturkmen35-cpu/tr-kanallar/releases/download/v3.26/Alins-TV-3.26.apk",
+  "sha256": "a8b866d0ae774b17036e6d297ae446479cfc09190438fc32a46bdc58fbc202c9",
   "minSdk": 21,
-  "notes": "Kanal listesi kendiliğinden yenilenir; yeni sürümler artık TV'ye çevrim içi gelir."
+  "notes": "Güncellemeler artık kendiliğinden kurulur."
 }

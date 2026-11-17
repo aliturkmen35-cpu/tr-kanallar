@@ -53,6 +53,13 @@ object Updater {
         }
     }
 
+    /**
+     * Güncelleme hiç sorulmadan kurulabilir mi: Android 12+ ve izleyici Alin's'e
+     * "bilinmeyen uygulama yükleme" iznini (bir kez) vermiş olmalı.
+     */
+    fun canSilent(context: Context): Boolean =
+        Build.VERSION.SDK_INT >= 31 && runCatching { context.packageManager.canRequestPackageInstalls() }.getOrDefault(false)
+
     /** APK'yı indirir ve özetini doğrular. İlerleme 0-100. Hata olursa istisna atar. */
     fun download(context: Context, info: Info, progress: (Int) -> Unit): File {
         val file = File(context.cacheDir, "alins-guncelleme.apk")
@@ -112,6 +119,10 @@ object Updater {
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
         params.setAppPackageName(context.packageName)
+        // Android 12+: kendi güncellemesinde onay ekranı istenmez (izin bir kez verildiyse)
+        if (Build.VERSION.SDK_INT >= 31) {
+            params.setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        }
         val id = installer.createSession(params)
         installer.openSession(id).use { session ->
             session.openWrite("alins.apk", 0, apk.length()).use { out ->

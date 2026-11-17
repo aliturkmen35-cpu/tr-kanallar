@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         listsLoadedAt = System.currentTimeMillis()
         main.removeCallbacks(listRefresh)
         main.postDelayed(listRefresh, LIST_REFRESH_MS)
-        checkUpdate(manual = false)
+        checkUpdate(manual = false, quiet = true)
     }
 
     // ---- Çevrim içi güncelleme ----
@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity() {
      * Sunucuda yeni sürüm varsa izleyiciye sorar. Kendiliğinden denetimde "Sonra" denirse
      * aynı sürüm bir gün boyunca yeniden sorulmaz; Ayarlar'dan elle denetim her zaman sorar.
      */
-    private fun checkUpdate(manual: Boolean) {
+    private fun checkUpdate(manual: Boolean, quiet: Boolean = false) {
         if (updateDialogOpen || updateBusy) return
         Thread {
             val info = runCatching { Updater.check() }.getOrNull()
@@ -223,6 +223,11 @@ class MainActivity : AppCompatActivity() {
                 val later = prefs.getInt("updLaterCode", 0) == info.code &&
                     System.currentTimeMillis() - prefs.getLong("updLaterT", 0L) < 24 * 3600_000L
                 if (!manual && later) return@post
+                // Uygulama yeni açıldıysa / TV uykudan döndüyse ve TV izin veriyorsa hiç sormadan kur
+                if (!manual && quiet && Updater.canSilent(this)) {
+                    startUpdate(info, silent = true)
+                    return@post
+                }
                 updateDialogOpen = true
                 AlertDialog.Builder(this)
                     .setTitle("Alin's ${info.name} hazır")
@@ -239,10 +244,12 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun startUpdate(info: Updater.Info) {
+    private fun startUpdate(info: Updater.Info, silent: Boolean = false) {
         if (updateBusy) return
         updateBusy = true
-        Toast.makeText(this, "Alin's ${info.name} indiriliyor…", Toast.LENGTH_LONG).show()
+        Toast.makeText(this,
+            if (silent) "Alin's ${info.name} kuruluyor, birazdan kendiliğinden yeniden açılacak"
+            else "Alin's ${info.name} indiriliyor…", Toast.LENGTH_LONG).show()
         Thread {
             val result = runCatching {
                 val apk = Updater.download(applicationContext, info) { }
@@ -252,7 +259,7 @@ class MainActivity : AppCompatActivity() {
                 updateBusy = false
                 if (isFinishing || isDestroyed) return@post
                 result.onSuccess {
-                    Toast.makeText(this, "İndirildi. TV'nin kurulum onayını kabul edin", Toast.LENGTH_LONG).show()
+                    if (!silent) Toast.makeText(this, "İndirildi. TV onay isterse kabul edin", Toast.LENGTH_LONG).show()
                 }.onFailure { e ->
                     Toast.makeText(this, "Güncelleme indirilemedi: ${e.message}", Toast.LENGTH_LONG).show()
                 }
@@ -266,12 +273,13 @@ class MainActivity : AppCompatActivity() {
      */
     private var listsLoadedAt = 0L
     private val listRefresh = Runnable { refreshLists() }
-    private fun refreshLists() {
+    private fun refreshLists(wake: Boolean = false) {
         main.removeCallbacks(listRefresh)
         main.postDelayed(listRefresh, LIST_REFRESH_MS)
         if (baseCurated.isEmpty()) return // ilk yükleme bitmedi
         listsLoadedAt = System.currentTimeMillis()
-        checkUpdate(manual = false)
+        // İzlerken (3 saatlik denetim) güncelleme sorulur; TV uykudan dönerken sormadan kurulabilir
+        checkUpdate(manual = false, quiet = wake)
         io.execute {
             val repo = ChannelRepository(this)
             val curated = runCatching { repo.load() }.getOrNull()
@@ -1307,7 +1315,7 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         if (player == null && current >= 0) play(current)
         // TV uykudan dönünce: liste yarım saatten eskiyse yenile
-        if (baseCurated.isNotEmpty() && System.currentTimeMillis() - listsLoadedAt > 30 * 60_000L) refreshLists()
+        if (baseCurated.isNotEmpty() && System.currentTimeMillis() - listsLoadedAt > 30 * 60_000L) refreshLists(wake = true)
     }
 
     // ---- Takılma olursa alternatif: kaliteyi bir basamak düşür ----
