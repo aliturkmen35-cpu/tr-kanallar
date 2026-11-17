@@ -198,6 +198,66 @@ class MainActivity : AppCompatActivity() {
         listsLoadedAt = System.currentTimeMillis()
         main.removeCallbacks(listRefresh)
         main.postDelayed(listRefresh, LIST_REFRESH_MS)
+        checkUpdate(manual = false)
+    }
+
+    // ---- Çevrim içi güncelleme ----
+
+    private var updateDialogOpen = false
+    private var updateBusy = false
+
+    /**
+     * Sunucuda yeni sürüm varsa izleyiciye sorar. Kendiliğinden denetimde "Sonra" denirse
+     * aynı sürüm bir gün boyunca yeniden sorulmaz; Ayarlar'dan elle denetim her zaman sorar.
+     */
+    private fun checkUpdate(manual: Boolean) {
+        if (updateDialogOpen || updateBusy) return
+        Thread {
+            val info = runCatching { Updater.check() }.getOrNull()
+            main.post {
+                if (isFinishing || isDestroyed || updateDialogOpen || updateBusy) return@post
+                if (info == null) {
+                    if (manual) Toast.makeText(this, "Alin's güncel (sürüm ${BuildConfig.VERSION_NAME})", Toast.LENGTH_LONG).show()
+                    return@post
+                }
+                val later = prefs.getInt("updLaterCode", 0) == info.code &&
+                    System.currentTimeMillis() - prefs.getLong("updLaterT", 0L) < 24 * 3600_000L
+                if (!manual && later) return@post
+                updateDialogOpen = true
+                AlertDialog.Builder(this)
+                    .setTitle("Alin's ${info.name} hazır")
+                    .setMessage((if (info.notes.isBlank()) "" else info.notes + "\n\n") +
+                        "Şimdi indirilip kurulsun mu? Kurulumda TV bir kez onay ister.")
+                    .setPositiveButton("Güncelle") { _, _ -> startUpdate(info) }
+                    .setNegativeButton("Sonra") { _, _ ->
+                        prefs.edit().putInt("updLaterCode", info.code)
+                            .putLong("updLaterT", System.currentTimeMillis()).apply()
+                    }
+                    .setOnDismissListener { updateDialogOpen = false }
+                    .show()
+            }
+        }.start()
+    }
+
+    private fun startUpdate(info: Updater.Info) {
+        if (updateBusy) return
+        updateBusy = true
+        Toast.makeText(this, "Alin's ${info.name} indiriliyor…", Toast.LENGTH_LONG).show()
+        Thread {
+            val result = runCatching {
+                val apk = Updater.download(applicationContext, info) { }
+                Updater.install(applicationContext, apk)
+            }
+            main.post {
+                updateBusy = false
+                if (isFinishing || isDestroyed) return@post
+                result.onSuccess {
+                    Toast.makeText(this, "İndirildi. TV'nin kurulum onayını kabul edin", Toast.LENGTH_LONG).show()
+                }.onFailure { e ->
+                    Toast.makeText(this, "Güncelleme indirilemedi: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
     }
 
     /**
@@ -211,6 +271,7 @@ class MainActivity : AppCompatActivity() {
         main.postDelayed(listRefresh, LIST_REFRESH_MS)
         if (baseCurated.isEmpty()) return // ilk yükleme bitmedi
         listsLoadedAt = System.currentTimeMillis()
+        checkUpdate(manual = false)
         io.execute {
             val repo = ChannelRepository(this)
             val curated = runCatching { repo.load() }.getOrNull()
@@ -413,7 +474,7 @@ class MainActivity : AppCompatActivity() {
             "Türkiye ve bölgesel kanallar: " + if (world) "GÖSTER" else "GİZLE",
             "Kanalları TV'nin kanal listesine ve ana ekrana ekle",
             "Uygulamalar listesinde simge: " + if (launcherVisible()) "GÖRÜNÜR" else "GİZLİ (yalnızca TV kanalı)",
-            "Alin's sürüm ${BuildConfig.VERSION_NAME}",
+            "Alin's sürüm ${BuildConfig.VERSION_NAME} · güncellemeyi denetle",
         )
         AlertDialog.Builder(this)
             .setTitle("Ayarlar")
@@ -444,6 +505,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this, "Alin's simgesi uygulamalar listesine geri geldi", Toast.LENGTH_LONG).show()
                         main.post { showSettings() }
                     }
+                    4 -> checkUpdate(manual = true)
                 }
                 if (which <= 1) main.post { showSettings() }
             }
