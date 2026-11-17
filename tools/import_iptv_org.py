@@ -4,6 +4,8 @@ Kaynaklar:
   - iptv-org/api (https://github.com/iptv-org/api, Unlicense): kanal bilgileri ve akışlar
   - iptv-org/iptv streams/*.m3u: kanalı tanımsız akışların hangi ülkeye ait olduğu
   - Free-TV/IPTV (https://github.com/Free-TV/IPTV): elle seçilmiş ücretsiz/yasal kanallar
+  - dearbulut/iptv (https://github.com/dearbulut/iptv): Türkiye akışlarının sağlık testi; çalışan adres
+    öne alınır, bizde olmayan kanal/yedek eklenir
   - sources/tr_playlist.m3u: kullanıcının Türkiye listesi. Bizde olan kanala yedek adres olur,
     olmayan kanal Türkiye'ye eklenir; Alin's kanallarında yedeği olmayana channels.json'da yedek yazılır.
 
@@ -31,6 +33,8 @@ API = "https://iptv-org.github.io/api/"
 IPTV_STREAMS = "https://api.github.com/repos/iptv-org/iptv/contents/streams"
 IPTV_RAW = "https://raw.githubusercontent.com/iptv-org/iptv/master/streams/"
 FREETV = "https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8"
+# dearbulut/iptv (MIT): iptv-org verisinin günde iki kez sağlık testinden geçen kopyası (Türkiye dilimi)
+DEARBULUT_TR = "https://dearbulut.github.io/iptv/api/v1/by-country/tr.json"
 ROOT = Path(__file__).resolve().parent.parent
 
 PAID = re.compile(
@@ -54,7 +58,7 @@ PAID = re.compile(
 )
 ADULT = re.compile(r"xxx|adult|porn|\+18|18\+|erotic|hustler|playboy|brazzers", re.I)
 BAD_HOSTS = ("mangeinde", "siteyaptim", "tv.vin", "streameast", "crichd", "hesgoal", "totalsportek",
-             ".cfd/", "workers.dev", "stmify", "mangora", "iptvperu")
+             ".cfd/", "workers.dev", "stmify", "mangora", "iptvperu", "ayakkabiparti", "playhdnew")
 
 # --tr: yalnızca Türkçe (ve Türkiye'de yayın yapan Kürtçe/Zazaca) kanallar. Türkiye'den yayın yapan
 # Farsça/Arapça/İngilizce kanallar (GEM, Al-..., TRT World) yabancı sayılır.
@@ -298,6 +302,67 @@ def main():
         out[("f", url)] = item
         freetv += 1
 
+    # dearbulut/iptv: sağlık testi sonuçları + bizde olmayan Türkiye kanalları ve yedek adresler.
+    # Sonuçlar yalnızca SIRALAMA için kullanılır (çalışan adres öne); bölgesel engelli adres elenmez.
+    health, db_new, db_alt = {}, 0, 0
+    try:
+        db = json.loads(fetch(DEARBULUT_TR))
+    except Exception as e:
+        db = []
+        print(f"dearbulut alınamadı ({e}); sağlık sıralaması olmadan devam", file=sys.stderr)
+    out_by_cid = {}
+    for c in out.values():
+        cid = c["id"].split(":")[-1].split("@")[0]
+        if "." in cid and not c["id"].startswith(("w:u:", "w:f:")):
+            out_by_cid.setdefault(cid, c)
+    for ch in db:
+        cid, streams = ch.get("id") or "", ch.get("streams") or []
+        for st in streams:
+            health[st["url"]] = (st.get("health") or {}).get("status")
+        if not streams or cid in blocked or ch.get("is_nsfw") or ch.get("closed"):
+            continue
+        langs = set(ch.get("languages") or [])
+        if "--tr" in sys.argv and (FOREIGN_NAME.search(ch["name"]) or (langs and not TR_LANGS & langs)):
+            continue
+        usable = [st for st in streams
+                  if not bad(ch["name"], st["url"]) and not PAID.search(st.get("title") or "")]
+        if cid in have:  # Alin's kanalı: sıradaki yedek adaylar
+            curated_alts.setdefault(cid, []).extend(
+                st["url"] for st in usable if health.get(st["url"]) != "offline")
+            continue
+        usable = [st for st in usable if st["url"] not in seen]
+        if cid in out_by_cid:  # listede olan kanal: yeni adresler yedek olur
+            for st in usable:
+                seen.add(st["url"])
+                out_by_cid[cid].setdefault("_alts", []).append(
+                    (st["url"], headers_of(st.get("user_agent"), st.get("referrer"))))
+                db_alt += 1
+            continue
+        usable = [st for st in usable if health.get(st["url"]) != "offline"]
+        if not usable or (ch.get("country", "TR"), ch["name"].lower()) in known_names:
+            continue
+        first = usable[0]
+        item = {"id": f"w:d:{cid}", "name": ch["name"], "country": ch.get("country") or "TR", "url": first["url"],
+                "_alts": [(st["url"], headers_of(st.get("user_agent"), st.get("referrer"))) for st in usable[1:]]}
+        if h := headers_of(first.get("user_agent"), first.get("referrer")):
+            item["headers"] = h
+        if ch.get("categories"):
+            item["genre"] = ch["categories"][0]
+        if ch.get("logo") or cid in logos:
+            item["logo"] = logos.get(cid) or ch["logo"]
+        for st in usable:
+            seen.add(st["url"])
+        known_names.add((item["country"], ch["name"].lower()))
+        out[("d", cid)] = item
+        out_by_cid[cid] = item
+        db_new += 1
+        print(f"  + {ch['name']}  {first['url']}", file=sys.stderr)
+    print(f"dearbulut: {db_new} yeni kanal, {db_alt} yedek adres, {len(health)} adresin sağlık durumu", file=sys.stderr)
+
+    def health_rank(url):
+        # çalışıyor -> bilinmiyor / bölgesel engelli -> testte kapalı
+        return {"online": 0, "offline": 2}.get(health.get(url), 1)
+
     # Kullanıcının Türkiye listesi (sources/tr_playlist.m3u)
     local, extra_fb, curated_fb = 0, 0, 0
     lp = ROOT / "sources" / "tr_playlist.m3u"
@@ -355,6 +420,7 @@ def main():
         add = [u for u in dict.fromkeys(urls) if u not in cur and not any(h in u for h in BAD_HOSTS)]
         if check:
             add = [u for u in add if host_exists(u)]
+        add.sort(key=health_rank)
         merged = (list(c.get("backups") or []) + add)[: MAX_URLS - 2]
         if merged and merged != c.get("backups"):
             c["backups"] = merged
@@ -377,7 +443,7 @@ def main():
         live = [a for a in uniq if host_exists(a[0])] if check else uniq
         if not live:
             return False
-        live = live[:MAX_URLS]
+        live = sorted(live, key=lambda a: health_rank(a[0]))[:MAX_URLS]  # kararlı sıralama: çalışan öne
         c["url"], h = live[0]
         c.pop("headers", None)
         if h:
@@ -432,7 +498,7 @@ def main():
     else:
         items = sorted((c for c, k in zip(cands, ok) if k), key=lambda c: (c["country"], c["name"].lower()))
     data = {
-        "source": "iptv-org/api + iptv-org/iptv (streams) + Free-TV/IPTV",
+        "source": "iptv-org/api + iptv-org/iptv (streams) + Free-TV/IPTV + dearbulut/iptv (sağlık testi)",
         "updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "channels": items,
     }
