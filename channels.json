@@ -1,6 +1,6 @@
 {
-  "version": 24,
-  "updated": "2026-11-15 01:11 UTC",
+  "version": 25,
+  "updated": "2026-11-18 01:30 UTC",
   "channels": [
     {
       "id": "trt1",
@@ -54,7 +54,7 @@
       "page": "https://www.kanald.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/kanald/[^\\\"'<>\\s]+",
       "iptv": "KanalD.tr",
-      "youtube": "b94j0fwsPGQ",
+      "youtube": "LeSvBemnieY",
       "youtubeChannel": "UCFoe1tg8MuHjRzmqXtV816A",
       "webProxy": true
     },
