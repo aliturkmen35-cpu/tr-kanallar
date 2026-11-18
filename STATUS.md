@@ -1,13 +1,13 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-18 09:00 UTC · 53/62 kanal erişilebilir
+Son kontrol: 2026-11-18 17:56 UTC · 57/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
 
 | Kanal | Durum | Not |
 |---|---|---|
-| TRT 1 | ✅ |  |
+| TRT 1 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | ATV | ✅ |  |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
@@ -28,10 +28,10 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| TRT Müzik | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Çocuk | ✅ |  |
+| TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
-| TRT Avaz | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
 | TRT 2 | ✅ |  |
 | TRT Genç | ✅ |  |
@@ -56,14 +56,14 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Süper FM | ✅ |  |
 | Metro FM | ✅ |  |
 | Slow Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
-| Radyo Fenomen | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| Radyo Fenomen | ✅ |  |
 | Alem FM | ✅ |  |
 | TRT FM | ✅ |  |
 | TRT Radyo 1 | ✅ |  |
 | TRT Türkü | ✅ |  |
 | Pal Nostalji | ✅ |  |
 | Radyo 45'lik | ✅ |  |
-| TRT Diyanet Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT Diyanet Çocuk | ✅ |  |
 | TRT EBA | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TBMM TV | ✅ |  |
 | TV 4 | ✅ |  |
