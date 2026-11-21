@@ -1,6 +1,6 @@
 {
-  "version": 25,
-  "updated": "2026-11-18 01:30 UTC",
+  "version": 26,
+  "updated": "2026-11-21 01:59 UTC",
   "channels": [
     {
       "id": "trt1",
@@ -20,7 +20,7 @@
       "pageHeaders": {
         "Referer": "https://www.atv.com.tr/"
       },
-      "youtube": "s62-b2AkWmw",
+      "youtube": "ykRVR5Vc2WU",
       "youtubeChannel": "UCUVZ7T_kwkxDOGFcDlFI-hg",
       "fallbackUrl": "http://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/atv/atv_360p.m3u8",
       "backups": [
@@ -54,7 +54,7 @@
       "page": "https://www.kanald.com.tr/canli-yayin",
       "pattern": "https://demiroren\\.daioncdn\\.net/kanald/[^\\\"'<>\\s]+",
       "iptv": "KanalD.tr",
-      "youtube": "LeSvBemnieY",
+      "youtube": "RXzn_Ie-Ulc",
       "youtubeChannel": "UCFoe1tg8MuHjRzmqXtV816A",
       "webProxy": true
     },
@@ -78,7 +78,7 @@
       "category": "Ulusal",
       "url": "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8",
       "iptv": "NOWTV.tr",
-      "youtube": "--HNcSaI5Gs",
+      "youtube": "Src56IfFFzQ",
       "youtubeChannel": "UCJe13zu6MyE6Oueac41KAqg"
     },
     {
@@ -181,7 +181,7 @@
       "iptv": "HaberturkTV.tr",
       "web": false,
       "fallbackUrl": "https://tv.ensonhaber.com/haberturk/haberturk.m3u8",
-      "youtube": "1r-TDzlI3mA",
+      "youtube": "s4KIyYkwiM0",
       "youtubeChannel": "UCn6dNfiRE_Xunu7iMyvD7AA"
     },
     {
@@ -263,7 +263,7 @@
       "pattern": "https://canli\\.tgrthaber\\.com/[^\\\"'<>\\s]+\\.m3u8",
       "iptv": "TGRTHaber.tr",
       "fallbackUrl": "https://b01c02nl.mediatriple.net/videoonlylive/mtsxxkzwwuqtglive/broadcast_5fe4598be8e5d.smil/playlist.m3u8",
-      "youtube": "MUmXnWIOkN8",
+      "youtube": "WX29nlgdqho",
       "youtubeChannel": "UCzgrZ-CndOoylh2_e72nSBQ"
     },
     {
@@ -287,7 +287,7 @@
       "category": "Haber",
       "url": "https://tv-trtarabi.medya.trt.com.tr/master.m3u8",
       "iptv": "TRTArabi.tr",
-      "youtube": "sat-YpJQ-fg",
+      "youtube": "b-fcHOnDXDc",
       "youtubeChannel": "UC5GvVahlgulCyo4cshSmbcg"
     },
     {
@@ -352,7 +352,7 @@
       "category": "Ulusal",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/a2tv/a2tv.m3u8",
       "iptv": "A2TV.tr",
-      "youtube": "UPKASvgEYFY",
+      "youtube": "GqkJcl5S2_A",
       "youtubeChannel": "UCNcexIxh3KbJUQYeh9FeSUA"
     },
     {
@@ -606,7 +606,7 @@
       "category": "Spor",
       "url": "https://rnttwmjcin.turknet.ercdn.net/lcpmvefbyo/aspor/aspor.m3u8",
       "iptv": "ASpor.tr",
-      "youtube": "nol9os2B8zE",
+      "youtube": "DwFLd1Mg0eE",
       "youtubeChannel": "UCJElRTCNEmLemgirqvsW63Q"
     },
     {
