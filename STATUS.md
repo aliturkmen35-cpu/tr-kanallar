@@ -1,13 +1,13 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-22 02:04 UTC · 57/62 kanal erişilebilir
+Son kontrol: 2026-11-22 10:04 UTC · 58/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
 
 | Kanal | Durum | Not |
 |---|---|---|
-| TRT 1 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT 1 | ✅ |  |
 | ATV | ✅ |  |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
