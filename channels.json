@@ -312,7 +312,10 @@
       "name": "TRT Türk",
       "category": "Diğer",
       "url": "https://tv-trtturk.medya.trt.com.tr/master.m3u8",
-      "iptv": "TRTTurk.tr"
+      "iptv": "TRTTurk.tr",
+      "backups": [
+        "https://r.eu.cdn-redge.media/livehls/oeu/mt/live/trt_turk/live.livx/playlist.m3u8"
+      ]
     },
     {
       "id": "trtavaz",
