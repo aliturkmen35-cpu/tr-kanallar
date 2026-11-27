@@ -79,7 +79,10 @@
       "url": "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv.m3u8",
       "iptv": "NOWTV.tr",
       "youtube": "Src56IfFFzQ",
-      "youtubeChannel": "UCJe13zu6MyE6Oueac41KAqg"
+      "youtubeChannel": "UCJe13zu6MyE6Oueac41KAqg",
+      "backups": [
+        "https://uycyyuuzyh.turknet.ercdn.net/nphindgytw/nowtv/nowtv_720p.m3u8"
+      ]
     },
     {
       "id": "tv8",
@@ -460,7 +463,7 @@
       "name": "Power FM",
       "category": "Radyo",
       "type": "radio",
-      "url": "https://listen.powerapp.com.tr/powerfm/mpeg/icecast.audio"
+      "url": "https://live.powerapp.com.tr/powerfmadver/abr/playlist.m3u8"
     },
     {
       "id": "r-joyturk",
@@ -522,7 +525,7 @@
       "name": "Slow Türk",
       "category": "Radyo",
       "type": "radio",
-      "url": "https://radyo.duhnet.tv/slowturk"
+      "url": "https://stream.radyotvonline.net/hls/play/slowturk.m3u8"
     },
     {
       "id": "r-fenomen",
