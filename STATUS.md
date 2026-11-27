@@ -1,13 +1,13 @@
 # Kanal durumu
 
-Son kontrol: 2026-11-27 09:59 UTC · 57/62 kanal erişilebilir
+Son kontrol: 2026-11-27 19:24 UTC · 56/62 kanal erişilebilir
 
 Kontrol GitHub'ın yurt dışındaki sunucularından yapılır. Burada kapalı görünen
 bir kanal Türkiye'den açılıyor olabilir.
 
 | Kanal | Durum | Not |
 |---|---|---|
-| TRT 1 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| TRT 1 | ✅ |  |
 | ATV | ✅ |  |
 | Show TV | ✅ |  |
 | Kanal D | ✅ |  |
@@ -19,7 +19,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | National Geographic | ✅ | resmi YouTube canlı yayını |
 | Nat Geo Wild | ✅ | resmi YouTube canlı yayını |
 | 360 | ✅ |  |
-| TRT Haber | ✅ |  |
+| TRT Haber | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | Habertürk | ✅ |  |
 | NTV | ✅ |  |
 | CNN Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
@@ -28,12 +28,12 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TGRT Haber | ✅ |  |
 | TRT World | ✅ |  |
 | TRT Arabi | ✅ |  |
-| TRT Çocuk | ✅ |  |
+| TRT Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Müzik | ✅ |  |
 | TRT Türk | ✅ |  |
 | TRT Avaz | ✅ |  |
 | TRT Kurdî | ✅ |  |
-| TRT 2 | ✅ |  |
+| TRT 2 | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT Genç | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | A2 | ✅ |  |
 | Euro D | ✅ |  |
@@ -47,7 +47,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Minika Go | ✅ |  |
 | Diyanet TV | ✅ |  |
 | Power Türk | ✅ |  |
-| Power FM | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| Power FM | ✅ |  |
 | Joy Türk | ✅ |  |
 | Joy Türk Akustik | ✅ |  |
 | Kral FM | ✅ |  |
@@ -55,7 +55,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | Radyo 7 | ✅ |  |
 | Süper FM | ✅ |  |
 | Metro FM | ✅ |  |
-| Slow Türk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
+| Slow Türk | ✅ |  |
 | Radyo Fenomen | ✅ |  |
 | Alem FM | ✅ |  |
 | TRT FM | ✅ |  |
@@ -63,7 +63,7 @@ bir kanal Türkiye'den açılıyor olabilir.
 | TRT Türkü | ✅ |  |
 | Pal Nostalji | ✅ |  |
 | Radyo 45'lik | ✅ |  |
-| TRT Diyanet Çocuk | ✅ |  |
+| TRT Diyanet Çocuk | ⚠️ | yurt dışından erişilemedi ya da yayın kapalı |
 | TRT EBA | ✅ |  |
 | TBMM TV | ✅ |  |
 | TV 4 | ✅ |  |
